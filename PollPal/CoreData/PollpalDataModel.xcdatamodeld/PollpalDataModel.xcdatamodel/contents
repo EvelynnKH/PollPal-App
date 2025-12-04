@@ -33,8 +33,8 @@
         <attribute name="question_img_url" optional="YES" attributeType="String"/>
         <attribute name="question_price" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="question_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="question_text" optional="YES" attributeType="String"/>
         <attribute name="question_type" optional="YES" attributeType="String"/>
-        <attribute name="quetion_text" optional="YES" attributeType="String"/>
         <relationship name="has_dresponse" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DResponse" inverseName="in_question" inverseEntity="DResponse"/>
         <relationship name="has_hresponse" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="HResponse" inverseName="in_question" inverseEntity="HResponse"/>
         <relationship name="has_option" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Option" inverseName="in_question" inverseEntity="Option"/>
