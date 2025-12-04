@@ -2,16 +2,31 @@ import SwiftUI
 import CoreData
 
 struct ListSurveyView: View {
-    // Kita tetap butuh context untuk dipassing ke ViewModel
-    @Environment(\.managedObjectContext) private var viewContext
     
     // StateObject akan menampung ViewModel
     @StateObject private var viewModel: ListSurveyViewModel
     
+    let pageTitle: String
+    
     // Custom Init untuk Inject Context
-    init(context: NSManagedObjectContext) {
-        _viewModel = StateObject(wrappedValue: ListSurveyViewModel(context: context))
-    }
+    init(category: String? = nil, searchText: String? = nil) {
+            // Tentukan judul halaman
+            if let cat = category {
+                self.pageTitle = cat // Misal: "Technology"
+            } else if let search = searchText {
+                self.pageTitle = "Search: \(search)"
+            } else {
+                self.pageTitle = "All Surveys"
+            }
+            
+            // Siapkan ViewModel dengan filter
+            let context = PersistenceController.shared.container.viewContext
+            _viewModel = StateObject(wrappedValue: ListSurveyViewModel(
+                context: context,
+                category: category,
+                searchText: searchText
+            ))
+        }
     
     var body: some View {
         VStack(alignment: .leading) {
