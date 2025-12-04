@@ -6,57 +6,61 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct HistoryView: View {
+    // Inject Context & ViewModel
+    @Environment(\.managedObjectContext) private var viewContext
+    @StateObject private var viewModel: HistoryViewModel
     
-    // Contoh model data
-        struct SurveyItem: Identifiable {
-            let id = UUID()
-            let owner: String
-            let title: String
-            let status: SurveyStatus
-            let categories: [String]
-        }
-        
-        enum SurveyStatus {
-            case inProgress
-            case finished
-        }
-        
-        let surveys: [SurveyItem] = [
-            SurveyItem(owner: "Feli",
-                       title: "Survey Kebiasaan dan Hobi di Rumah",
-                       status: .inProgress,
-                       categories: ["Psychology", "Daily Life"]),
-            SurveyItem(owner: "Evelin",
-                       title: "Survey Desain Karakter Game Genshin Impact",
-                       status: .finished,
-                       categories: ["Design", "Technology"])
-        ]
+    // Custom Init
+    init(context: NSManagedObjectContext) {
+        _viewModel = StateObject(wrappedValue: HistoryViewModel(context: context))
+    }
     
     var body: some View {
         VStack(spacing: 0) {
-
-                    // search bar
             
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            ForEach(surveys) { survey in
-                                SurveyCard(item: survey)
-                            }
-                        }
-                        .padding()
-                    }
+            // Search Bar Placeholder (Sesuai kode aslimu)
+            // TextField("Search...", text: .constant("")) ...
+            
+            ScrollView {
+                VStack(spacing: 16) {
                     
-                    Spacer()
+                    if viewModel.historyItems.isEmpty {
+                        // Empty State
+                        VStack {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                                .padding()
+                            Text("Belum ada riwayat survei")
+                                .foregroundColor(.gray)
+                        }
+                        .padding(.top, 50)
+                    } else {
+                        // Data dari ViewModel
+                        ForEach(viewModel.historyItems) { item in
+                            SurveyCard(item: item)
+                        }
+                    }
                 }
-                .background(Color(hex: "#EFEFEF"))
-                .ignoresSafeArea(edges: .bottom)
+                .padding()
+            }
+            
+            Spacer()
+        }
+        .background(Color(hex: "#EFEFEF"))
+        .ignoresSafeArea(edges: .bottom)
+        .onAppear {
+            viewModel.fetchHistory() // Refresh data saat muncul
+        }
     }
 }
 
+// Komponen Card dipisah agar rapi
 struct SurveyCard: View {
-    let item: HistoryView.SurveyItem
+    let item: HistoryItem
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -78,11 +82,9 @@ struct SurveyCard: View {
                 .fontWeight(.bold)
                 .padding(.vertical)
             
-            //Category
-            
-            
             // Status section
             HStack {
+                // Category Loop
                 ForEach(item.categories, id: \.self) { cat in
                     Text(cat)
                         .font(.caption)
@@ -92,9 +94,10 @@ struct SurveyCard: View {
                         .foregroundColor(.black)
                         .cornerRadius(10)
                 }
+                
                 Spacer()
                 
-                // Status
+                // Status Logic
                 if item.status == .inProgress {
                     Text("Continue..")
                         .foregroundColor(.orange)
@@ -117,8 +120,4 @@ struct SurveyCard: View {
         .cornerRadius(14)
         .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
     }
-}
-    
-#Preview {
-    HistoryView()
 }

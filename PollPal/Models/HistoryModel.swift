@@ -6,3 +6,16 @@
 //
 
 import Foundation
+
+enum SurveyStatus {
+    case inProgress
+    case finished
+}
+
+struct HistoryItem: Identifiable {
+    let id: UUID
+    let owner: String
+    let title: String
+    let status: SurveyStatus
+    let categories: [String]
+}
