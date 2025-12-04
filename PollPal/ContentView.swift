@@ -21,7 +21,7 @@ struct ContentView: View {
             }
             
             NavigationStack{
-                    HistoryView()
+                    HistoryView(context: viewContext)
                     .navigationTitle("History")
             }
             .tabItem{

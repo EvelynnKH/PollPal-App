@@ -33,8 +33,6 @@ struct DataSeeder {
 
     private static func createData(viewContext: NSManagedObjectContext) {
 
-       
-
         //Category
         let catTech = Category(context: viewContext)
         catTech.category_id = UUID()
@@ -47,7 +45,7 @@ struct DataSeeder {
         let catHealth = Category(context: viewContext)
         catHealth.category_id = UUID()
         catHealth.category_name = "Health"
-        
+
         //user
         let felicia = User(context: viewContext)
         felicia.user_id = UUID()
@@ -59,10 +57,22 @@ struct DataSeeder {
         felicia.user_profile_img = "cat"
         felicia.user_created_at = Date()
         felicia.user_status_del = false
-        
+
         felicia.addToLike_category(catTech)
         felicia.addToLike_category(catDaily)
 
+        let userCreator = User(context: viewContext)
+        userCreator.user_id = UUID()
+        userCreator.user_name = "Evelin"  // Nama Owner
+        userCreator.user_email = "evelin@pollpal.com"
+        userCreator.user_pwd = "evelin123"
+        userCreator.user_header_img = "mountain"
+        userCreator.user_profile_img = "cat"
+        userCreator.user_point = 500
+        userCreator.user_created_at = Date()
+        userCreator.user_status_del = false
+        
+        
         //Survey
         // 1. Survey Tech
         let survey1 = Survey(context: viewContext)
@@ -76,7 +86,7 @@ struct DataSeeder {
         survey1.is_public = true
         survey1.survey_updated_at = Date()
         survey1.survey_status_del = false
-        survey1.owned_by_user = felicia
+        survey1.owned_by_user = userCreator
 
         // Relasi Category (Many-to-Many)
         survey1.addToHas_category(catTech)
