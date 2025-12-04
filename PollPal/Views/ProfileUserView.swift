@@ -223,7 +223,7 @@ struct ProfileUserView: View {
                     // Hidden NavigationLinks
 //                    NavigationLink(destination: DashboardCreatorView(), isActive: $navigateToHelp) { EmptyView() }
 //                    NavigationLink(destination: DashboardCreatorView(), isActive: $navigateToSetting) { EmptyView() }
-//                    NavigationLink(destination: DashboardCreatorView(), isActive: $navigateToDashboard) { EmptyView() }
+                    NavigationLink(destination: DashboardCreatorView(context: viewContext), isActive: $navigateToDashboard) { EmptyView() }
                 }
                 .padding(.leading, 30)
                 
