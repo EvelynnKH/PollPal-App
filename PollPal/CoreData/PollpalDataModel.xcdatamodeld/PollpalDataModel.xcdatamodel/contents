@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="25B78" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="Category" representedClassName="Category" syncable="YES" codeGenerationType="class">
         <attribute name="category_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="category_name" optional="YES" attributeType="String"/>
@@ -17,7 +17,7 @@
     <entity name="HResponse" representedClassName="HResponse" syncable="YES" codeGenerationType="class">
         <attribute name="hresponse_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="submitted_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="has_dresponse" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DResponse" inverseName="in_hresponse" inverseEntity="DResponse"/>
+        <relationship name="has_dresponse" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="DResponse" inverseName="in_hresponse" inverseEntity="DResponse"/>
         <relationship name="in_question" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Question" inverseName="has_hresponse" inverseEntity="Question"/>
         <relationship name="in_survey" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Survey" inverseName="has_hresponse" inverseEntity="Survey"/>
         <relationship name="is_filled_by_user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="filled_hresponse" inverseEntity="User"/>
