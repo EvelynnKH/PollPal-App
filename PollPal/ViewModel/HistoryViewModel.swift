@@ -24,7 +24,7 @@ class HistoryViewModel: ObservableObject {
     
     func fetchHistory() {
         let userRequest: NSFetchRequest<User> = User.fetchRequest()
-        
+        //test
         // 1. JANGAN MENGANDALKAN URUTAN INSERT!
         // Gunakan Predicate untuk mencari spesifik user Felicia.
         userRequest.predicate = NSPredicate(format: "user_name == %@", targetUserName)
