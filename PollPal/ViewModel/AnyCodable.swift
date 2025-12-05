@@ -83,3 +83,37 @@ extension AnyCodable: Hashable {
         hasher.combine(String(describing: value))
     }
 }
+
+extension AnyCodable {
+    static func == (lhs: AnyCodable, rhs: AnyCodable) -> Bool {
+        switch (lhs.value, rhs.value) {
+        case (nil, nil):
+            return true
+        case let (l as Bool, r as Bool):
+            return l == r
+        case let (l as Int, r as Int):
+            return l == r
+        case let (l as Double, r as Double):
+            return l == r
+        case let (l as String, r as String):
+            return l == r
+        case let (l as [Any], r as [Any]):
+            // Recursively compare arrays
+            guard l.count == r.count else { return false }
+            for (i, element) in l.enumerated() {
+                if AnyCodable(element) != AnyCodable(r[i]) { return false }
+            }
+            return true
+        case let (l as [String: Any], r as [String: Any]):
+            // Recursively compare dictionaries
+            guard l.count == r.count else { return false }
+            for (key, value) in l {
+                guard let rValue = r[key] else { return false }
+                if AnyCodable(value) != AnyCodable(rValue) { return false }
+            }
+            return true
+        default:
+            return false
+        }
+    }
+}

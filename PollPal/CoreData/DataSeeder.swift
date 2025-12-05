@@ -94,7 +94,7 @@ struct DataSeeder {
         // Tambah Dummy Question (Biar estimasi waktu muncul)
         let q1 = Question(context: viewContext)
         q1.question_id = UUID()
-        q1.quetion_text = "Apakah kamu pakai ChatGPT?"
+        q1.question_text = "Apakah kamu pakai ChatGPT?"
         q1.question_type = "Multiple Choice"
         q1.question_price = 10
         q1.question_status_del = false
@@ -114,7 +114,7 @@ struct DataSeeder {
 
         let q2 = Question(context: viewContext)
         q2.question_id = UUID()
-        q2.quetion_text = "Ceritakan pengalamanmu!"
+        q2.question_text = "Ceritakan pengalamanmu!"
         q2.question_type = "Long Answer"
         q2.question_price = 10
         q2.question_status_del = false
@@ -122,7 +122,7 @@ struct DataSeeder {
 
         let q3 = Question(context: viewContext)
         q3.question_id = UUID()
-        q3.quetion_text = "Apakah kamu pakai ChatGPT?"
+        q3.question_text = "Apakah kamu pakai ChatGPT?"
         q3.question_type = "Multiple Choice"
         q3.question_price = 10
         q3.question_status_del = false
@@ -147,7 +147,7 @@ struct DataSeeder {
 
         let q4 = Question(context: viewContext)
         q4.question_id = UUID()
-        q4.quetion_text = "Jam berapa kamu tidur?"
+        q4.question_text = "Jam berapa kamu tidur?"
         q4.question_type = "Multiple Choice"
         q4.question_price = 10
         q4.question_status_del = false
@@ -158,7 +158,7 @@ struct DataSeeder {
 
         let q5 = Question(context: viewContext)
         q5.question_id = UUID()
-        q5.quetion_text = "Apakah main HP di kasur?"
+        q5.question_text = "Apakah main HP di kasur?"
         q5.question_type = "Multiple Choice"
         q5.question_price = 10
         q5.question_status_del = false
@@ -182,7 +182,7 @@ struct DataSeeder {
         // Question
         let q6 = Question(context: viewContext)
         q6.question_id = UUID()
-        q6.quetion_text = "Apakah kamu setuju makanannya enak?"
+        q6.question_text = "Apakah kamu setuju makanannya enak?"
         q6.question_type = "Short Answer"
         q6.question_price = 1
         q6.question_status_del = false
