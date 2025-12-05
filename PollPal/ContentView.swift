@@ -13,7 +13,8 @@ struct ContentView: View {
     var body: some View {
         TabView{
             NavigationStack{
-                DashboardRView(context: viewContext)
+                WelcomeView()
+//                DashboardRView(context: viewContext)
             }
             .tabItem {
                 Image(systemName: "house")
