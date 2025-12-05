@@ -18,7 +18,8 @@ class SurveyViewModel: ObservableObject {
         let request = Question.fetchRequest()
 
         // FILTER BERDASARKAN SURVEY
-        request.predicate = NSPredicate(format: "survey_id == %@", survey.survey_id! as CVarArg)
+        request.predicate = NSPredicate(format: "in_survey == %@", survey)
+
 
         do {
             questions = try context.fetch(request)
@@ -27,10 +28,10 @@ class SurveyViewModel: ObservableObject {
         }
     }
 
-    func addQuestion(type: String) {
+    func addQuestion(type: QuestionType) {
         let q = Question(context: context)
         q.question_id = UUID()
-        q.question_type = type
+        q.question_type = type.rawValue
         q.question_text = "Pertanyaan Baru"
         q.question_status_del = false
         q.question_price = 0

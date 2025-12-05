@@ -48,9 +48,19 @@ struct DashboardCreatorView: View {
                 
                 // MARK: - ACTION BUTTONS
                 HStack(spacing: 10) {
-                    NavigationLink(destination: ContentView()) {
+                    NavigationLink(
+                        destination: SurveyView(
+                            context: viewContext,
+                              survey: {
+                                let s = Survey(context: viewContext)
+                                s.survey_id = UUID()
+                                return s
+                            }()
+                        )
+                    ) {
                         ActionButton(icon: "plus", text: "Create New Survey")
                     }
+
                     ActionButton(icon: "bell", text: "Notifications (23)")
                 }
                 
