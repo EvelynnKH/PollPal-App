@@ -22,8 +22,16 @@ class ProfileUserViewModel: ObservableObject {
     private var viewContext: NSManagedObjectContext
     private var currentUser: User?
 
-    // Hardcode nama target sesuai DataSeeder
-    private let targetName = "Felicia Kathrin"
+    // 1. Hapus Hardcode Nama
+    // private let targetName = "Felicia Kathrin" // DELETE
+
+    // 2. Ambil UUID User yang sedang login
+    private var currentUserUUID: UUID? {
+        if let idString = UserDefaults.standard.string(forKey: "logged_in_user_id") {
+            return UUID(uuidString: idString)
+        }
+        return nil
+    }
 
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -31,12 +39,22 @@ class ProfileUserViewModel: ObservableObject {
     }
 
     func fetchUserProfile() {
-        // 1. Fetch User
+        // 3. Cek apakah ada user login?
+        guard let myID = currentUserUUID else {
+            print("⚠️ ProfileViewModel: Tidak ada user login (Guest).")
+            // Reset ke default Guest
+            self.userName = "Guest"
+            self.userEmail = "Please Login"
+            self.userPoints = 0
+            self.completedSurveysCount = 0
+            self.userInterests = "-"
+            return
+        }
+
         let request: NSFetchRequest<User> = User.fetchRequest()
         
-        // --- MODIFIKASI DISINI ---
-        // Kita paksa cari user dengan nama "Felicia Kathrin"
-        request.predicate = NSPredicate(format: "user_name == %@", targetName)
+        // 4. Ubah Predicate: Cari berdasarkan user_id (UUID)
+        request.predicate = NSPredicate(format: "user_id == %@", myID as CVarArg)
         request.fetchLimit = 1
 
         do {
@@ -47,34 +65,35 @@ class ProfileUserViewModel: ObservableObject {
                 print("👤 Profile Loaded: \(user.user_name ?? "No Name")")
                 self.currentUser = user
 
-                // 2. Set Data ke Property
+                // 5. Set Data ke Property
                 self.userName = user.user_name ?? "No Name"
                 self.userEmail = user.user_email ?? "-"
                 self.userPoints = Int(user.user_point)
                 self.userHeaderImage = user.user_header_img ?? "mountain"
                 self.userProfileImage = user.user_profile_img ?? "cat"
                 
+                // Logic Interests (Categories)
                 if let interests = user.like_category as? Set<Category> {
                     let names = interests.compactMap { $0.category_name }
 
                     if names.isEmpty {
                         self.userInterests = "No interest yet"
                     } else {
-                        // Hasil: "Daily Life, Technology" (sesuai urutan abjad)
                         self.userInterests = names.sorted().joined(separator: ", ")
                     }
                 } else {
                     self.userInterests = "No interest yet"
                 }
 
-                // 3. Hitung Jumlah Survey yang sudah dikerjakan
+                // Logic Survey Count
+                // Pastikan relationship 'filled_hresponse' tipe To-Many di Core Data Editor
                 if let filledSurveys = user.filled_hresponse {
                     self.completedSurveysCount = filledSurveys.count
                 } else {
                     self.completedSurveysCount = 0
                 }
             } else {
-                print("⚠️ User '\(targetName)' tidak ditemukan. Pastikan DataSeeder sudah jalan.")
+                print("❌ User ID '\(myID)' tidak ditemukan. Pastikan proses Sign Up/Login berhasil.")
             }
         } catch {
             print("❌ Gagal mengambil profile user: \(error.localizedDescription)")

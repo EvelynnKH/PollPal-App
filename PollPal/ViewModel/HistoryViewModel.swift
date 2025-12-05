@@ -14,8 +14,13 @@ class HistoryViewModel: ObservableObject {
     
     private var viewContext: NSManagedObjectContext
     
-    // Ganti ini nanti dengan sistem Login asli (UserDefaults)
-    let targetUserName = "Felicia Kathrin"
+    // 2. Ambil UUID User yang sedang login
+    private var currentUserUUID: UUID? {
+        if let idString = UserDefaults.standard.string(forKey: "logged_in_user_id") {
+            return UUID(uuidString: idString)
+        }
+        return nil
+    }
     
     init(context: NSManagedObjectContext) {
         self.viewContext = context
@@ -23,11 +28,17 @@ class HistoryViewModel: ObservableObject {
     }
     
     func fetchHistory() {
+        // 3. Cek apakah ada user login?
+        guard let myID = currentUserUUID else {
+            print("⚠️ HistoryViewModel: Tidak ada user login (Guest). History kosong.")
+            self.historyItems = [] // Kosongkan list
+            return
+        }
+
         let userRequest: NSFetchRequest<User> = User.fetchRequest()
-        //test
-        // 1. JANGAN MENGANDALKAN URUTAN INSERT!
-        // Gunakan Predicate untuk mencari spesifik user Felicia.
-        userRequest.predicate = NSPredicate(format: "user_name == %@", targetUserName)
+        
+        // 4. Ubah Predicate: Cari berdasarkan user_id (UUID)
+        userRequest.predicate = NSPredicate(format: "user_id == %@", myID as CVarArg)
         userRequest.fetchLimit = 1
         
         do {
@@ -37,7 +48,7 @@ class HistoryViewModel: ObservableObject {
             if let currentUser = users.first {
                 print("👤 HistoryViewModel: User ditemukan -> \(currentUser.user_name ?? "Nil")")
                 
-                // 2. Ambil HResponse
+                // 5. Ambil HResponse (History)
                 if let responses = currentUser.filled_hresponse as? Set<HResponse> {
                     print("   Jumlah History: \(responses.count)")
                     
@@ -53,6 +64,7 @@ class HistoryViewModel: ObservableObject {
                             categoryNames = cats.compactMap { $0.category_name }.sorted()
                         }
                         
+                        // Tentukan Status: Jika ada tanggal submit, berarti selesai
                         let status: SurveyStatus = (hRes.submitted_at != nil) ? .finished : .inProgress
                         
                         return HistoryItem(
@@ -63,12 +75,17 @@ class HistoryViewModel: ObservableObject {
                             categories: categoryNames
                         )
                     }
+                    
+                    // Opsional: Urutkan history berdasarkan tanggal submit terbaru
+                    // self.historyItems.sort { ... }
+                    
                 } else {
-                    print("⚠️ User \(targetUserName) tidak punya history (filled_hresponse kosong).")
+                    print("⚠️ User ini belum memiliki history.")
+                    self.historyItems = []
                 }
             } else {
-                print("❌ User '\(targetUserName)' TIDAK DITEMUKAN di Database.")
-                // Ini berarti Seeder gagal jalan atau Data masih kotor
+                print("❌ User ID '\(myID)' tidak ditemukan di Database.")
+                self.historyItems = []
             }
             
         } catch {

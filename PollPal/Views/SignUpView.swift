@@ -8,13 +8,24 @@
 import SwiftUI
 
 struct SignUpView: View {
-    @State private var email = ""
-    @State private var password = ""
-    @State private var fullName = ""
+    // 1. Hubungkan ViewModel & Context
+    @Environment(\.managedObjectContext) private var viewContext
+    @StateObject private var viewModel: SignUpViewModel
+    
+    // State UI Lokal (hanya untuk mata/password visibility)
     @State private var isPasswordVisible = false
+    
+    init() {
+        // Init ViewModel dengan context sementara (akan di-inject via onAppear/Environment di app flow nyata)
+        // Cara aman untuk StateObject di init:
+        let context = PersistenceController.shared.container.viewContext
+        _viewModel = StateObject(wrappedValue: SignUpViewModel(context: context))
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Spacer().frame(height: 30)
+            
             // MARK: - Title
             Text("Sign Up")
                 .font(.system(size: 32, weight: .bold))
@@ -22,26 +33,33 @@ struct SignUpView: View {
             Text("Fill in your information below")
                 .font(.system(size: 16))
                 .foregroundColor(.gray)
+            
             // MARK: - Email
             VStack(alignment: .leading, spacing: 8) {
                 Text("Email Address")
                     .font(.subheadline.bold())
                     .foregroundColor(Color(hex: "1F3A45"))
-                TextField("hello@example.com", text: $email)
+                
+                // Binding ke viewModel.email
+                TextField("hello@example.com", text: $viewModel.email)
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none) // Email jangan huruf besar otomatis
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(10)
             }
+            
             // MARK: - Password
             VStack(alignment: .leading, spacing: 8) {
                 Text("Password")
                     .font(.subheadline.bold())
                     .foregroundColor(Color(hex: "1F3A45"))
                 HStack {
+                    // Binding ke viewModel.password
                     if isPasswordVisible {
-                        TextField("••••••••", text: $password)
+                        TextField("••••••••", text: $viewModel.password)
                     } else {
-                        SecureField("••••••••", text: $password)
+                        SecureField("••••••••", text: $viewModel.password)
                     }
                     Button(action: { isPasswordVisible.toggle() }) {
                         Image(
@@ -54,24 +72,32 @@ struct SignUpView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(10)
             }
+            
             // MARK: - Full Name
             VStack(alignment: .leading, spacing: 8) {
                 Text("Full Name")
                     .font(.subheadline.bold())
                     .foregroundColor(Color(hex: "1F3A45"))
-                TextField("Budi Budi", text: $fullName)
+                
+                // Binding ke viewModel.fullName
+                TextField("Budi Budi", text: $viewModel.fullName)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(10)
             }
+            
             // MARK: - Terms
             Text(
                 "By Signing up, you agree to our **Terms & Conditions** and **Privacy Policy**."
             )
             .font(.system(size: 12))
             .foregroundColor(.gray)
-            // MARK: - Button
-            Button(action: {}) {
+            
+            // MARK: - Button Register
+            Button(action: {
+                // Panggil fungsi register di ViewModel
+                viewModel.registerUser()
+            }) {
                 Text("Sign Up")
                     .font(.system(.headline, weight: .bold))
                     .foregroundColor(.orange)
@@ -81,7 +107,16 @@ struct SignUpView: View {
                     .cornerRadius(16)
             }
             .padding(.top, 8)
+            
+            // MARK: - Navigation Link (Otomatis ke Dashboard jika sukses)
+            // Ini trik untuk pindah halaman secara programmatik
+            .navigationDestination(isPresented: $viewModel.isRegistered) {
+                DashboardRView(context: viewContext)
+                    .navigationBarBackButtonHidden(true) // Supaya gak bisa back ke Sign up
+            }
+            
             Spacer()
+            
             // MARK: - Login link
             HStack {
                 Text("Joined Us Before?")
@@ -97,9 +132,9 @@ struct SignUpView: View {
         }
         .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
+        // Alert Error
+        .alert(isPresented: $viewModel.showError) {
+            Alert(title: Text("Error"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("OK")))
+        }
     }
-}
-
-#Preview {
-    SignUpView()
 }
