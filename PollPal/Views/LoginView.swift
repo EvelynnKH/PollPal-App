@@ -27,37 +27,38 @@ struct LoginView: View {
             // MARK: - TITLE
             Text("Login")
                 .font(.largeTitle.bold())
-                .foregroundColor(Color(hex: "1F3A45"))
+                .foregroundColor(Color(hex: "0C4254"))
             Text("Welcome back to the app")
-                .foregroundColor(Color(hex: "1F3A45").opacity(0.7))
+                .foregroundColor(Color(hex: "0C4254").opacity(0.7))
             
             // MARK: - EMAIL FIELD
             VStack(alignment: .leading, spacing: 6) {
                 Text("Email Address")
                     .font(.subheadline.bold())
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 
                 // Binding ke viewModel
-                TextField("hello@example.com", text: $viewModel.email)
+                TextField("Enter your email address", text: $viewModel.email)
                     .padding()
                     .background(Color.gray.opacity(0.15))
                     .cornerRadius(12)
                     .autocapitalization(.none)
                     .keyboardType(.emailAddress)
+                    .foregroundColor(.black)
             }
             
             // MARK: - PASSWORD FIELD
             VStack(alignment: .leading, spacing: 6) {
                 Text("Password")
                     .font(.subheadline.bold())
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 
                 HStack {
                     // Binding ke viewModel
                     if isPasswordHidden {
-                        SecureField(".................", text: $viewModel.password)
+                        SecureField("Enter your password", text: $viewModel.password)
                     } else {
-                        TextField("Password", text: $viewModel.password)
+                        TextField("Enter your password", text: $viewModel.password)
                     }
                     
                     Button(action: {
@@ -66,7 +67,7 @@ struct LoginView: View {
                         Image(
                             systemName: isPasswordHidden ? "eye.slash" : "eye"
                         )
-                        .foregroundColor(Color(hex: "1F3A45"))
+                        .foregroundColor(Color(hex: "0C4254"))
                     }
                 }
                 .padding()
@@ -77,9 +78,11 @@ struct LoginView: View {
             // MARK: - FORGOT PASSWORD
             HStack {
                 Spacer()
-                Button("Forget Password?") {}
-                    .font(.footnote.bold())
-                    .foregroundColor(Color(hex: "1F3A45"))
+                NavigationLink(destination: ForgotPasswordView()) {
+                                    Text("Forgot Password?")
+                                        .font(.footnote.bold())
+                                        .foregroundColor(Color(hex: "0C4254"))
+                                }
             }
             
             // MARK: - LOGIN BUTTON
@@ -89,10 +92,10 @@ struct LoginView: View {
             }) {
                 Text("Login")
                     .font(.headline.bold())
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color(hex: "FE982A"))
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color(hex: "1F3A45"))
+                    .background(Color(hex: "0C4254"))
                     .cornerRadius(16)
             }
             .padding(.top, 10)
@@ -109,11 +112,11 @@ struct LoginView: View {
             HStack {
                 Spacer()
                 Text("Don’t have an account?")
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 NavigationLink(destination: SignUpView()) {
                     Text("Sign Up")
                         .font(.headline.bold())
-                        .foregroundColor(Color(hex: "1F3A45"))
+                        .foregroundColor(Color(hex: "0C4254"))
                 }
                 Spacer()
             }
