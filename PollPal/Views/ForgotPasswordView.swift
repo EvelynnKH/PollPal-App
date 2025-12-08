@@ -48,12 +48,13 @@ struct ForgotPasswordView: View {
                             .foregroundColor(Color(hex: "0C4254"))
                         
                         // Binding ke ViewModel
-                        TextField("hello@example.com", text: $viewModel.email)
+                        TextField("Enter your email address", text: $viewModel.email)
                             .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(10)
-                            .keyboardType(.emailAddress)
+                            .background(Color.gray.opacity(0.15))
+                            .cornerRadius(12)
                             .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .foregroundColor(.black)
                     }
                     
                     // MARK: Send Code Button
@@ -94,15 +95,8 @@ struct ForgotPasswordView: View {
                 // MARK: - NAVIGASI JIKA SUKSES
                 // Jika email ditemukan, pindah ke layar Verification/Reset Password
                 .navigationDestination(isPresented: $viewModel.navigateToVerify) {
-                    // SEMENTARA: Kita arahkan ke Text dulu karena view ResetPassword belum ada
-                    // Nanti ganti dengan: ResetPasswordView(email: viewModel.email)
-                    VStack {
-                        Text("Email Verified!")
-                            .font(.title)
-                        Text("Code sent to \(viewModel.email)")
-                            .foregroundColor(.gray)
-                        // Disini nanti User akan memasukkan Password Baru
-                    }
+                    VerificationView(email: viewModel.email)
+                            .navigationBarBackButtonHidden(false)
                 }
             }
             // Alert Error jika email tidak ketemu

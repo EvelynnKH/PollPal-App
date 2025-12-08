@@ -29,7 +29,7 @@ struct SignUpView: View {
             // MARK: - Title
             Text("Sign Up")
                 .font(.system(size: 32, weight: .bold))
-                .foregroundColor(Color(hex: "1F3A45"))
+                .foregroundColor(Color(hex: "0C4254"))
             Text("Fill in your information below")
                 .font(.system(size: 16))
                 .foregroundColor(.gray)
@@ -38,28 +38,29 @@ struct SignUpView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Email Address")
                     .font(.subheadline.bold())
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 
                 // Binding ke viewModel.email
-                TextField("hello@example.com", text: $viewModel.email)
-                    .keyboardType(.emailAddress)
-                    .autocapitalization(.none) // Email jangan huruf besar otomatis
+                TextField("Enter your email address", text: $viewModel.email)
                     .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(10)
+                    .background(Color.gray.opacity(0.15))
+                    .cornerRadius(12)
+                    .autocapitalization(.none)
+                    .keyboardType(.emailAddress)
+                    .foregroundColor(.black)
             }
             
             // MARK: - Password
             VStack(alignment: .leading, spacing: 8) {
                 Text("Password")
                     .font(.subheadline.bold())
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 HStack {
                     // Binding ke viewModel.password
                     if isPasswordVisible {
-                        TextField("••••••••", text: $viewModel.password)
+                        TextField("Enter your password", text: $viewModel.password)
                     } else {
-                        SecureField("••••••••", text: $viewModel.password)
+                        SecureField("Enter your password", text: $viewModel.password)
                     }
                     Button(action: { isPasswordVisible.toggle() }) {
                         Image(
@@ -77,10 +78,10 @@ struct SignUpView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Full Name")
                     .font(.subheadline.bold())
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 
                 // Binding ke viewModel.fullName
-                TextField("Budi Budi", text: $viewModel.fullName)
+                TextField("Enter your full name", text: $viewModel.fullName)
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(10)
@@ -88,7 +89,7 @@ struct SignUpView: View {
             
             // MARK: - Terms
             Text(
-                "By Signing up, you agree to our **Terms & Conditions** and **Privacy Policy**."
+                "By signing up, you agree to our **Terms & Conditions** and **Privacy Policy**."
             )
             .font(.system(size: 12))
             .foregroundColor(.gray)
@@ -100,10 +101,10 @@ struct SignUpView: View {
             }) {
                 Text("Sign Up")
                     .font(.system(.headline, weight: .bold))
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color(hex: "FE982A"))
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color(hex: "1F3A45"))
+                    .background(Color(hex: "0C4254"))
                     .cornerRadius(16)
             }
             .padding(.top, 8)
@@ -120,11 +121,11 @@ struct SignUpView: View {
             // MARK: - Login link
             HStack {
                 Text("Joined Us Before?")
-                    .foregroundColor(Color(hex: "1F3A45"))
+                    .foregroundColor(Color(hex: "0C4254"))
                 NavigationLink(destination: LoginView()) {
                     Text("Login")
                         .font(.headline.bold())
-                        .foregroundColor(Color(hex: "1F3A45"))
+                        .foregroundColor(Color(hex: "0C4254"))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
@@ -134,7 +135,7 @@ struct SignUpView: View {
         .navigationBarBackButtonHidden(true)
         // Alert Error
         .alert(isPresented: $viewModel.showError) {
-            Alert(title: Text("Error"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("OK")))
+            Alert(title: Text("Warning"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("OK")))
         }
     }
 }

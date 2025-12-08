@@ -1,30 +1,48 @@
-import SwiftUI
 import CoreData
+import SwiftUI
 
 struct SurveyView: View {
     @Environment(\.managedObjectContext) private var context
 
     @StateObject var vm: SurveyViewModel
     @State private var selectedTab = 0
-    @State var survey: Survey
+    @ObservedObject var survey: Survey
+    @State private var showingImagePicker = false
+    @State private var selectedImage: UIImage?
+    @State private var mode: String = "create"
 
-    init(context: NSManagedObjectContext, survey: Survey) {
-        _vm = StateObject(wrappedValue: SurveyViewModel(context: context, survey: survey))
-        self._survey = State(initialValue: survey)
-    }
+    init(context: NSManagedObjectContext, survey: Survey?, mode: String = "create") {
+            self._mode = State(initialValue: mode)
+
+            if mode == "create" {
+                let newSurvey = Survey(context: context)
+                newSurvey.survey_id = UUID()
+                newSurvey.survey_created_at = Date()
+                self.survey = newSurvey
+                _vm = StateObject(wrappedValue: SurveyViewModel(context: context, survey: newSurvey))
+                vm.createSurveyIfNeeded()
+            } else {
+                let existingSurvey = survey!
+                self.survey = existingSurvey
+                _vm = StateObject(wrappedValue: SurveyViewModel(context: context, survey: existingSurvey))
+            }
+        }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-
             VStack(spacing: 0) {
 
                 // MARK: Header
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading) {
-                        Text((survey.survey_title ?? "").isEmpty ? "Untitled Survey" : (survey.survey_title ?? ""))
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
+                        Text(
+                            (survey.survey_title ?? "").isEmpty
+                                ? "Untitled Survey"
+                                : (survey.survey_title ?? "")
+                        )
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
 
                         Text("Please Add Your Question...")
                             .font(.caption)
@@ -46,7 +64,7 @@ struct SurveyView: View {
                 ScrollView {
 
                     if selectedTab == 0 {
-                        editorTabContent
+                        editorTabContent.padding(.top, 10)
                     } else {
                         Text("cmn bs dibuka klo udh ada yg ngisi")
                     }
@@ -71,9 +89,12 @@ struct SurveyView: View {
                 .fontWeight(.bold)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(selectedTab == index ? Color.themeBlue : Color.white)
+                        .fill(
+                            selectedTab == index ? Color.themeBlue : Color.white
+                        )
                         .shadow(
-                            color: selectedTab == index ? Color.black.opacity(0.25) : .clear,
+                            color: selectedTab == index
+                                ? Color.black.opacity(0.25) : .clear,
                             radius: selectedTab == index ? 6 : 0,
                             y: 3
                         )
@@ -88,29 +109,44 @@ struct SurveyView: View {
             // TITLE + DESCRIPTION
             VStack(alignment: .leading, spacing: 5) {
 
-                TextEditor(text: Binding(
-                    get: { survey.survey_title ?? "" },
-                    set: { survey.survey_title = $0 }
-                ))
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .frame(minHeight: 40, maxHeight: 120)
-                    .padding(4)
-                    .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3)))
+                TextEditor(
+                    text: Binding(
+                        get: {
+                            survey.survey_title ?? "Enter Your Survey Title"
+                        },
+                        set: { survey.survey_title = $0 }
+                    )
+                )
+                .font(.title)
+                .fontWeight(.semibold)
+                .frame(minHeight: 40, maxHeight: 120)
+                .padding(4)
+                .background(
+                    RoundedRectangle(cornerRadius: 8).stroke(
+                        Color.gray.opacity(0.3)
+                    )
+                )
 
                 ZStack(alignment: .topLeading) {
-                    if (survey.survey_description ?? "").isEmpty {
+                    if (survey.survey_description
+                        ?? "What is your survey about?").isEmpty
+                    {
                         Text("What is your survey about?")
                             .foregroundColor(.gray)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 12)
                     }
-                    TextEditor(text: Binding(
-                        get: { survey.survey_description ?? "" },
-                        set: { survey.survey_description = $0 }
-                    ))
-                        .font(.subheadline)
-                        .padding(4)
+                    TextEditor(
+                        text: Binding(
+                            get: {
+                                survey.survey_description
+                                    ?? "What is your survey about?"
+                            },
+                            set: { survey.survey_description = $0 }
+                        )
+                    )
+                    .font(.subheadline)
+                    .padding(4)
                 }
                 .frame(minHeight: 120)
                 .background(
@@ -128,7 +164,8 @@ struct SurveyView: View {
                         qtype: Binding(
                             get: { question.safeType },
                             set: { question.safeType = $0 }
-                        )
+                        ),
+                        vm: vm
                     )
                 }
             }
@@ -145,9 +182,13 @@ struct SurveyView: View {
             HStack {
                 Spacer()
                 NavigationLink(
-                    destination: FinishingSurveyView(survey: survey, questions: vm.questions)
+                    destination: FinishingSurveyView(
+                        vm: vm,
+                        survey: survey,
+                        questions: vm.questions
+                    )
                 ) {
-                    Text("Publish")
+                    Text("Next")
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .padding(.vertical, 10)
@@ -174,17 +215,24 @@ struct SurveyView: View {
                         .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                 }
 
-                Button(action: {}) {
-                    Text("Add Image")
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 15)
-                        .background(Color(hex: "FE982A"))
-                        .cornerRadius(15)
-                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-                }
-
+//                Button(action: { showingImagePicker = true }) {
+//                    Text("Add Image")
+//                        .fontWeight(.bold)
+//                        .foregroundColor(.white)
+//                        .frame(maxWidth: .infinity)
+//                        .padding(.vertical, 15)
+//                        .background(Color(hex: "FE982A"))
+//                        .cornerRadius(15)
+//                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+//                }
+//                .sheet(isPresented: $showingImagePicker) {
+//                    ImagePicker(image: $selectedImage)
+//                        .onDisappear {
+//                            if let img = selectedImage {
+//                                vm.saveImage(img)
+//                            }
+//                        }
+//                }
             }
             .padding(.horizontal, 30)
             .padding(.top, 20)
@@ -196,4 +244,3 @@ struct SurveyView: View {
         .edgesIgnoringSafeArea(.bottom)
     }
 }
-
