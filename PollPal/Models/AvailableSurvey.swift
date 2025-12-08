@@ -14,15 +14,7 @@ struct AvailableSurvey: Identifiable {
     let category: String
     let reward: Int?
     let estimatedTime: Int?
-    
-    // Init standard untuk Preview / Dummy
-    init(id: UUID = UUID(), title: String, category: String, reward: Int?, estimatedTime: Int?) {
-        self.id = id
-        self.title = title
-        self.category = category
-        self.reward = reward
-        self.estimatedTime = estimatedTime
-    }
+    let originEntity: Survey
     
     // Init khusus dari Core Data Entity
     init(entity: Survey) {
@@ -57,5 +49,7 @@ struct AvailableSurvey: Identifiable {
         } else {
             self.estimatedTime = 0
         }
+        
+        self.originEntity = entity
     }
 }

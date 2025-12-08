@@ -189,7 +189,7 @@ extension DashboardRView {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(viewModel.popularSurveys, id: \.self) { survey in
-                        NavigationLink(destination: ListSurveyView()) {
+                        NavigationLink(destination: SurveyDetailView(survey: survey)) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(survey.survey_title ?? "No Title")
                                     .font(.headline)

@@ -54,7 +54,7 @@ struct ListSurveyView: View {
                         ForEach(viewModel.surveys) { survey in
                             NavigationLink {
                                 // Nanti arahkan ke detail survey / pengerjaan survey
-                                Text("Detail Survey: \(survey.title)")
+                                SurveyDetailView(survey: survey.originEntity)
                             } label: {
                                 SurveyAvailableRow(item: survey)
                             }
