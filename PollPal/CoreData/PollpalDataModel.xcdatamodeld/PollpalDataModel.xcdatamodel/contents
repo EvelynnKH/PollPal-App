@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25B78" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="Category" representedClassName="Category" syncable="YES" codeGenerationType="class">
         <attribute name="category_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="category_name" optional="YES" attributeType="String"/>
@@ -45,6 +45,7 @@
         <attribute name="survey_created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="survey_description" optional="YES" attributeType="String"/>
         <attribute name="survey_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="survey_img_url" optional="YES" attributeType="String"/>
         <attribute name="survey_points" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="survey_rewards_points" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="survey_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -57,10 +58,12 @@
         <relationship name="owned_by_user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="has_survey" inverseEntity="User"/>
     </entity>
     <entity name="Transaction" representedClassName="Transaction" syncable="YES" codeGenerationType="class">
+        <attribute name="transaction_created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="transaction_description" optional="YES" attributeType="String"/>
         <attribute name="transaction_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="transaction_point_change" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="transaction_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="transaction_type" optional="YES" attributeType="String"/>
         <relationship name="in_survey" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Survey" inverseName="has_transaction" inverseEntity="Survey"/>
         <relationship name="owned_by_user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="has_transaction" inverseEntity="User"/>
     </entity>

@@ -54,6 +54,7 @@ struct SuccessTopUpView: View {
                 .padding(.horizontal, 40)
                 .padding(.bottom, 160)
             }
+            .toolbar(.hidden, for: .tabBar) 
             .padding(.top, 100)
         }
     }

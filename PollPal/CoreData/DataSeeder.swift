@@ -209,13 +209,46 @@ struct DataSeeder {
         dRes2.dresponse_answer_text = "Sangat membantu tugas coding saya."  // Isi manual essay
 
         //transaction
+        //transaction TYPE hanya 4 macam : TOPUP, REWARDSURVEY, COST SURVEY , WITHDRAW
         let trans = Transaction(context: viewContext)
         trans.transaction_id = UUID()
-        trans.transaction_point_change = 150  // Poin nambah
-        trans.transaction_description = "Reward: Penggunaan AI Mahasiswa"
+        trans.transaction_point_change = 1000
+        trans.transaction_description = "Top Up Berhasil"
         trans.transaction_status_del = false
-        trans.owned_by_user = felicia  // Link ke User
-        trans.in_survey = survey1  // Link sumber poin dari survey mana
+        trans.owned_by_user = felicia
+        trans.transaction_created_at = Date() - 86400 // 1 day ago
+        trans.transaction_type = "TOP UP"
+        
+        let trans2 = Transaction(context: viewContext)
+        trans2.transaction_id = UUID()
+        trans2.transaction_point_change = 50
+        trans2.transaction_description = "Reward mengisi survey: Kepuasan Customer"
+        trans2.transaction_status_del = false
+        trans2.owned_by_user = felicia
+        trans2.in_survey = survey1
+        trans2.transaction_created_at = Date() - 3600 * 5 // 5 hours ago
+        trans2.transaction_type = "REWARD SURVEY"
+        
+        let trans3 = Transaction(context: viewContext)
+        trans3.transaction_id = UUID()
+        trans3.transaction_point_change = -1000
+        trans3.transaction_description = "Biaya membuat survey: Riset Pasar Produk Baru"
+        trans3.transaction_status_del = false
+        trans3.owned_by_user = felicia
+        trans3.in_survey = survey2
+        trans3.transaction_created_at = Date() - 3600 * 24 * 3 // 3 days ago
+        trans3.transaction_type = "COST SURVEY"
+        
+        let trans4 = Transaction(context: viewContext)
+        trans4.transaction_id = UUID()
+        trans4.transaction_point_change = -500
+        trans4.transaction_description = "Withdraw poin ke e-wallet"
+        trans4.transaction_status_del = false
+        trans4.owned_by_user = felicia
+        trans4.transaction_created_at = Date() - 3600 * 2 // 2 hours ago
+        trans4.transaction_type = "WITHDRAW"
+        
+        UserDefaults.standard.set(felicia.user_id?.uuidString, forKey: "logged_in_user_id")
 
         //simpan
         do {

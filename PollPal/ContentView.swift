@@ -24,7 +24,6 @@ struct ContentView: View {
                 .transition(.opacity)
                 
             } else {
-                
                 // SKENARIO B: SUDAH LOGIN
                 // Tampilkan Dashboard Utama dengan Tab Bar
                 TabView {

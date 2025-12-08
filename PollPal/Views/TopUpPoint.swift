@@ -1,10 +1,29 @@
 import SwiftUI
 struct TopUpPoint: View {
-    @State private var selectedAmount: Int = 10_000
+    @State private var selectedAmount: Int32 = 0
     @State private var selectedMethod: String = "OVO"
     @State private var navigateToSuccess: Bool = false
+    @State private var typedAmount: String = ""
     
     let amounts = [1_000, 2_000, 5_000, 10_000, 15_000, 20_000]
+    
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest private var loggedInUser: FetchedResults<User>
+    
+    // Computed: total payment in Rp
+    private var totalPayment: Int32 {
+        // For example: 1 point = 10 Rp
+        return selectedAmount * 10
+    }
+    
+    init() {
+        let userIDString = UserDefaults.standard.string(forKey: "logged_in_user_id") ?? ""
+        let userUUID = UUID(uuidString: userIDString) ?? UUID()
+        _loggedInUser = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "user_id == %@", userUUID as CVarArg)
+        )
+    }
     
     var body: some View {
         NavigationStack{
@@ -16,6 +35,7 @@ struct TopUpPoint: View {
                     .foregroundColor(.darkTeal)
                     .padding(.top, 120)
                     .padding(.horizontal)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
                 // MARK: Amount Card
                 VStack(alignment: .leading, spacing: 16) {
@@ -26,12 +46,18 @@ struct TopUpPoint: View {
                     
                     TextField("Enter amount", value: $selectedAmount, formatter: NumberFormatter.decimalFormatter)
                         .keyboardType(.numberPad)
-                        .font(.system(size: 40, weight: .bold))
+                        .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.darkTeal)
                         .padding(.vertical, 10)
                         .padding(.horizontal)
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(12)
+                        .keyboardType(.numberPad)
+                        .onChange(of: typedAmount) { _ in
+                                // Keep only digits
+                                typedAmount = typedAmount.filter { "0123456789".contains($0) }
+                                selectedAmount = Int32(typedAmount) ?? 0
+                            }
                     
                     Divider()
                     
@@ -39,7 +65,7 @@ struct TopUpPoint: View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
                         ForEach(amounts, id: \.self) { amount in
                             Button {
-                                selectedAmount = amount
+                                selectedAmount = Int32(amount)
                             } label: {
                                 Text("+ \(formatCurrency(amount))")
                                     .font(.system(size: 16, weight: .medium))
@@ -59,15 +85,15 @@ struct TopUpPoint: View {
                 .padding(.horizontal)
                 
                 // MARK: Payment Method Section
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 10) {
                     
                     Text("Payment Method")
                         .font(.title3)
                         .foregroundColor(.darkTeal)
-                        .padding(.top,10)
+
                         .padding(.bottom, 10)
                     
-                    VStack(spacing: 24) {
+                    VStack(spacing: 18) {
                         
                         PaymentRow(
                             icon: "gopay",
@@ -106,10 +132,41 @@ struct TopUpPoint: View {
                 
                 Spacer()
                 
+                // MARK: Total Payment
+                HStack(spacing: 8) {
+                    Text("Total Payment:")
+                        .font(.title2)
+                        .foregroundColor(.darkTeal)
+                    Spacer()
+                    Text("Rp \(totalPayment.formattedWithSeparator())")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.darkTeal)
+                }
+                .padding(.horizontal)
+                .padding(.bottom,10)
+                
                 // MARK: Bottom Button
                 VStack {
                     Button(action: {
-                        navigateToSuccess = true
+                        if let user = loggedInUser.first {
+                            user.user_point += selectedAmount // top-up
+                            let trans = Transaction(context: viewContext)
+                            trans.transaction_id = UUID()
+                            trans.transaction_point_change = selectedAmount
+                            trans.transaction_description = "Top Up Berhasil"
+                            trans.transaction_status_del = false
+                            trans.owned_by_user = user
+                            trans.transaction_created_at = Date()
+                            trans.transaction_type = "TOP UP"
+                            
+                            do {
+                                try viewContext.save() // MUST save
+                                navigateToSuccess = true
+                            } catch {
+                                print("❌ Failed to save transaction: \(error)")
+                            }
+                        }
                     }) {
                         Text("Confirm Payment")
                             .font(.system(size: 22, weight: .semibold))
@@ -121,13 +178,13 @@ struct TopUpPoint: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 25)
-                    
                     .navigationDestination(isPresented: $navigateToSuccess) {
-                        SuccessTopUpView() // Navigate to this view
+                        SuccessTopUpView()
                             .navigationBarBackButtonHidden(true)
                     }
                 }
             }
+            .toolbar(.hidden, for: .tabBar)
             .padding(.bottom, 90)
             .padding(.horizontal, 10)
             .background(Color(.systemGray6))
@@ -194,6 +251,15 @@ extension NumberFormatter {
         return formatter
     }
 }
+
+extension Int32 {
+    func formattedWithSeparator() -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
+    }
+}
+
 #Preview {
     TopUpPoint()
 }
