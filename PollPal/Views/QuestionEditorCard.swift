@@ -5,6 +5,8 @@ struct QuestionEditorCard: View {
     @ObservedObject var question: Question          // Core Data object
     @Binding var qtype: QuestionType
     @Environment(\.managedObjectContext) private var context
+    @ObservedObject var vm: SurveyViewModel
+    
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -149,7 +151,9 @@ struct QuestionEditorCard: View {
             QuestionRenderer(
                 question: question,
                 response: tempResponse,
-                qtype: $qtype
+                qtype: $qtype,
+                vm: vm,
+                isPreview: true
             )
             .padding(.top, 4)
         }
