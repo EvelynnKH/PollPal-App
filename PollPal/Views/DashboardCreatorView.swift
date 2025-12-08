@@ -13,12 +13,18 @@ struct DashboardCreatorView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var vm: DashboardCreatorViewModel
     @State private var navigationPath: [String] = []
+    @ObservedObject private var viewModel: DashboardViewModel
 
     init(context: NSManagedObjectContext) {
-        _vm = StateObject(
-            wrappedValue: DashboardCreatorViewModel(context: context)
-        )
-    }
+            // StateObject
+            _vm = StateObject(wrappedValue: DashboardCreatorViewModel(context: context))
+
+            // default values untuk property lain:
+            _navigationPath = State(initialValue: [])
+
+            // viewModel HARUS di-init juga
+            self.viewModel = DashboardViewModel(context: context)
+        }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -26,7 +32,7 @@ struct DashboardCreatorView: View {
                 VStack(alignment: .leading, spacing: 24) {
 
                     // MARK: - HEADER
-                    Text("Hello, \(vm.user?.user_name ?? "Creator")")
+                    Text("Hello, \(viewModel.userName ?? "Creator")")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(Color(hex: "1F3A45"))
 
@@ -61,12 +67,13 @@ struct DashboardCreatorView: View {
                     HStack(spacing: 10) {
                         NavigationLink(
                             destination: SurveyView(
-                                context: viewContext,
+                                mode: "create",
                                 survey: {
                                     let s = Survey(context: viewContext)
                                     s.survey_id = UUID()
                                     return s
-                                }()
+                                }(),
+                                context: viewContext
                             )
                         ) {
                             ActionButton(

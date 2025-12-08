@@ -41,16 +41,53 @@ class SurveyViewModel: ObservableObject {
         // assign survey_id manual
         q.in_survey = survey
 
-        save()
+        saveContext()
         loadQuestions()
     }
     
+    func saveSurvey() {
+        survey.is_public = false
+        saveContext()
+        printSurveyAttributes()
+    }
 
-    func save() {
-        do { try context.save() }
-        catch { print("❌ Save error:", error) }
+    func publishSurvey() {
+        survey.is_public = true
+        saveContext()
+        printSurveyAttributes()
+    }
+
+    private func saveContext() {
+        do {
+            try context.save()
+            print("✅ Context saved successfully.")
+        } catch {
+            print("❌ Failed to save context:", error)
+        }
+    }
+
+    private func printSurveyAttributes() {
+        print("------------ SURVEY DATA ------------")
+        print("ID: \(survey.survey_id?.uuidString ?? "nil")")
+        print("Title: \(survey.survey_title ?? "nil")")
+        print("Desc: \(survey.survey_description ?? "nil")")
+        print("Created At: \(String(describing: survey.survey_created_at))")
+        print("Updated At: \(String(describing: survey.survey_updated_at))")
+        print("Is Public: \(survey.is_public)")
+        print("Is Deleted: \(survey.survey_status_del)")
+        print("------------------------------------")
     }
     
+    func refreshSurvey() {
+        let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+        req.predicate = NSPredicate(format: "survey_id == %@", survey.survey_id! as CVarArg)
+
+        if let updated = try? context.fetch(req).first {
+            self.survey = updated   // ⬅️ replace old object!
+        }
+    }
+
+
     func saveImage(_ image: UIImage) {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return }
 

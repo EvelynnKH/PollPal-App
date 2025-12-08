@@ -193,11 +193,12 @@ struct FinishingSurveyView: View {
                         // SAVE BUTTON
                         Button(action: {
                             survey.survey_updated_at = Date()
-                            vm.save()   // <— simpan via view model
+                            vm.saveSurvey()   // <— simpan via view model
 
                             do {
                                 try context.save()
                                 print("Survey saved!")
+                                print("SAVED:", survey.objectID)
                                 
                                 vm.reset()
                                 dismiss()
@@ -223,7 +224,7 @@ struct FinishingSurveyView: View {
                             survey.is_public = true      // <– set public
                             survey.survey_updated_at = Date()
 
-                            vm.save()      // <– tetap save via VM
+                            vm.publishSurvey()      // <– tetap save via VM
 
                             do {
                                 try context.save()
