@@ -11,23 +11,23 @@ import SwiftUI
 struct DashboardRView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel: DashboardViewModel
-
+    
     init(context: NSManagedObjectContext) {
         _viewModel = StateObject(
             wrappedValue: DashboardViewModel(context: context)
         )
     }
-
+    
     // MARK: - MAIN BODY
     // Sekarang body jadi sangat bersih dan mudah dibaca compiler
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading) {
-
+                
                 headerSection
-
+                
                 searchBarSection
-
+                
                 // Logic Ganti Layar: Search vs Dashboard Normal
                 if !viewModel.searchText.isEmpty {
                     searchResultsList
@@ -45,7 +45,7 @@ struct DashboardRView: View {
 // MARK: - SUBVIEWS EXTENSION
 // Kita pecah komponen UI di sini agar compiler tidak error "Time Out"
 extension DashboardRView {
-
+    
     // 1. Header (Hello, Name)
     private var headerSection: some View {
         HStack {
@@ -59,22 +59,22 @@ extension DashboardRView {
         .padding(.horizontal)
         .padding(.top)
     }
-
+    
     // 2. Search Bar
     private var searchBarSection: some View {
         VStack(alignment: .leading) {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
-
+                
                 // 2. TextField
                 TextField("Search survey...", text: $viewModel.searchText)
                     .font(.subheadline)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
-
+                
                 Spacer()
-
+                
                 // 3. Tombol Clear (X) - Muncul cuma kalau ada ketikan
                 if !viewModel.searchText.isEmpty {
                     Button(action: {
@@ -93,7 +93,7 @@ extension DashboardRView {
         .padding(.horizontal)
         .padding(.bottom)
     }
-
+    
     // 3. List Hasil Pencarian
     private var searchResultsList: some View {
         List(viewModel.searchResults, id: \.self) { survey in
@@ -105,7 +105,7 @@ extension DashboardRView {
         }
         .listStyle(.plain)
     }
-
+    
     // 4. Konten Dashboard Utama (ScrollView)
     private var dashboardContent: some View {
         ScrollView {
@@ -118,7 +118,7 @@ extension DashboardRView {
             .padding(.bottom, 50)  // Spacer bawah
         }
     }
-
+    
     // 5. Kartu Poin
     private var pointsCard: some View {
         VStack(alignment: .leading) {
@@ -128,27 +128,29 @@ extension DashboardRView {
                 .padding(.horizontal)
                 .padding(.top)
                 .fontWeight(.bold)
-
+            
             Text("\(viewModel.userPoints)")
                 .font(.title)
                 .foregroundStyle(Color(hex: "#FE982A"))
                 .padding(.horizontal)
                 .fontWeight(.bold)
-
+            
             Spacer()
-
-            Text("View Points")
-                .font(.title3)
-                .underline()
-                .foregroundStyle(Color(hex: "#FE982A"))
-                .padding()
+            
+            NavigationLink(destination: ViewPointView()) {
+                Text("View Points")
+                    .font(.title3)
+                    .underline()
+                    .foregroundStyle(Color(hex: "#FE982A"))
+                    .padding()
+            }
         }
         .padding()
         .frame(width: 370, height: 200, alignment: .leading)
         .background(Color(hex: "#0C4254"))
         .cornerRadius(12)
     }
-
+    
     // 6. Baris Kategori
     private var categoriesRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -173,7 +175,7 @@ extension DashboardRView {
         }
         .padding(.vertical)
     }
-
+    
     // 7. Baris Popular Survey
     private var popularSurveysRow: some View {
         VStack {
@@ -185,7 +187,7 @@ extension DashboardRView {
                     .padding(.horizontal)
                 Spacer()
             }
-
+            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(viewModel.popularSurveys, id: \.self) { survey in
@@ -221,7 +223,7 @@ extension DashboardRView {
             }
         }
     }
-
+    
     // 8. List Ongoing Survey
     private var ongoingSurveysList: some View {
         VStack {
@@ -235,7 +237,7 @@ extension DashboardRView {
                     Spacer()
                 }
                 .padding(.vertical)
-
+                
                 VStack(alignment: .leading, spacing: 16) {
                     ForEach(viewModel.ongoingSurveys, id: \.0) { item in
                         VStack {
@@ -246,25 +248,25 @@ extension DashboardRView {
                                     .truncationMode(.tail)
                                     .frame(maxWidth: 350, alignment: .leading)
                             }
-
+                            
                             HStack(spacing: 12) {
                                 GeometryReader { geo in
                                     ZStack(alignment: .leading) {
                                         RoundedRectangle(cornerRadius: 4)
                                             .fill(Color.gray.opacity(0.3))
                                             .frame(height: 8)
-
+                                        
                                         RoundedRectangle(cornerRadius: 4)
                                             .fill(Color(hex: "#FE982A"))
                                             .frame(
                                                 width: geo.size.width
-                                                    * CGFloat(item.1),
+                                                * CGFloat(item.1),
                                                 height: 8
                                             )
                                     }
                                 }
                                 .frame(height: 8)
-
+                                
                                 Text("\(Int(item.1 * 100))%")
                                     .font(.system(size: 14, weight: .semibold))
                                     .frame(width: 40, alignment: .trailing)

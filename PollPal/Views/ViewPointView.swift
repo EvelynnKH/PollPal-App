@@ -19,29 +19,29 @@ struct ViewPointView: View {
         // Currently logged-in User object
         @FetchRequest private var loggedInUser: FetchedResults<User>
 
-        init() {
-            // 1. Get logged-in user UUID from UserDefaults
-            let userIDString = UserDefaults.standard.string(forKey: "logged_in_user_id") ?? ""
-            let userUUID = UUID(uuidString: userIDString) ?? UUID() // fallback if missing
+    init() {
+        // 1. Get logged-in user UUID from UserDefaults
+        let userIDString = UserDefaults.standard.string(forKey: "logged_in_user_id") ?? ""
+        let userUUID = UUID(uuidString: userIDString) ?? UUID() // fallback if missing
 
-            // 2. Fetch survey history for current user
-            _surveyHistory = FetchRequest(
-                sortDescriptors: [NSSortDescriptor(keyPath: \HResponse.submitted_at, ascending: false)],
-                predicate: NSPredicate(format: "is_filled_by_user.user_id == %@", userUUID as CVarArg)
-            )
+        // 2. Fetch survey history for current user
+        _surveyHistory = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \HResponse.submitted_at, ascending: false)],
+            predicate: NSPredicate(format: "is_filled_by_user.user_id == %@", userUUID as CVarArg)
+        )
 
-            // 3. Fetch transactions for current user
-            _transactions = FetchRequest(
-                sortDescriptors: [],
-                predicate: NSPredicate(format: "owned_by_user.user_id == %@", userUUID as CVarArg)
-            )
+        // 3. Fetch transactions for current user
+        _transactions = FetchRequest(
+            sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.transaction_created_at, ascending: false)],
+            predicate: NSPredicate(format: "owned_by_user.user_id == %@", userUUID as CVarArg)
+        )
 
-            // 4. Fetch the current logged-in user
-            _loggedInUser = FetchRequest(
-                sortDescriptors: [],
-                predicate: NSPredicate(format: "user_id == %@", userUUID as CVarArg)
-            )
-        }
+        // 4. Fetch the current logged-in user
+        _loggedInUser = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "user_id == %@", userUUID as CVarArg)
+        )
+    }
 
     
     var body: some View {
@@ -51,15 +51,17 @@ struct ViewPointView: View {
                 Text("Points")
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(darkTeal)
-                    .padding(.top, 20)
+                    .padding(.top, 5)
                     .padding(.horizontal)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                
                 // MARK: POINTS CARD
                 VStack(spacing: 10) {
                     Text("My Points")
                         .font(.headline)
                         .foregroundColor(.white)
                     Text("\(loggedInUser.first?.user_point ?? 0)")
-                        .font(.system(size: 45, weight: .bold))
+                        .font(.system(size: 40, weight: .bold))
                         .foregroundColor(orange)
                     // BUTTONS
                     // MARK: BUTTONS
@@ -70,9 +72,9 @@ struct ViewPointView: View {
                                 Image(systemName: "hand.tap")
                                 Text("Withdraw")
                             }
-                            .font(.title3.bold())
+                            .font(.headline.bold())
                             .foregroundColor(darkTeal)
-                            .padding(.vertical, 15)
+                            .padding(.vertical, 10)
                             .padding(.horizontal, 20)
                             .background(Color.white)
                             .cornerRadius(20)
@@ -84,9 +86,9 @@ struct ViewPointView: View {
                                 Image(systemName: "plus")
                                 Text("Top Up")
                             }
-                            .font(.title3.bold())
+                            .font(.headline.bold())
                             .foregroundColor(darkTeal)
-                            .padding(.vertical, 15)
+                            .padding(.vertical, 10)
                             .padding(.horizontal, 25)
                             .background(Color.white)
                             .cornerRadius(20)
@@ -94,10 +96,11 @@ struct ViewPointView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 25)
+                .padding(.vertical, 20)
                 .background(darkTeal)
                 .cornerRadius(30)
                 .padding(.horizontal)
+                
                 // MARK: HISTORY TITLE
                 Text("History")
                     .font(.title3.bold())
@@ -114,44 +117,40 @@ struct ViewPointView: View {
                         .font(.title2)
                 }
                 .padding(.horizontal)
+
                 // MARK: DYNAMIC HISTORY LIST
                 ScrollView(.vertical, showsIndicators: false) {
-                    // Inside the ScrollView
                     VStack(spacing: 0) {
-                        // SURVEY HISTORY (Survey rewards)
-                        ForEach(surveyHistory) { h in
-                            let points = h.in_survey?.survey_points ?? 0
+                        
+                        // TRANSACTION HISTORY (Topup, reward, cost, withdraw)
+                        ForEach(transactions) { t in
+                            
+                            let points = Int(t.transaction_point_change)
+                            let dateString = formatDate(t.transaction_created_at)
+                            let type = t.transaction_type ?? ""
+                            
                             TransactionRow_UI(
-                                icon: "doc.text.fill",
-                                title: h.in_survey?.survey_title ?? "Survey",
-                                date: formatDate(h.submitted_at), // optional: dynamic date
+                                icon: iconFor(type: type),
+                                title: titleFor(transaction: t),
+                                date: dateString,
                                 points: points >= 0 ? "+ \(points)" : "- \(abs(points))",
                                 isPositive: points >= 0
                             )
-                            Divider().padding(.leading, 80)
-                        }
-                        
-                        // TRANSACTION HISTORY (Topup, earn, spend)
-                        ForEach(transactions) { t in
-                            let points = Int(t.transaction_point_change) // make sure this matches your Core Data attribute
-                            TransactionRow_UI(
-                                icon: "dollarsign.circle.fill",
-                                title: t.transaction_description ?? "Transaction",
-                                date: "30 November 2025", // <- still hardcoded
-                                points: points >= 0 ? "+ \(points)" : "- \(abs(points))",
-                                isPositive: points >= 0 // negative points will be red
-                            )
+                            
                             Divider().padding(.leading, 80)
                         }
                     }
                     .padding(.horizontal)
                 }
+
                 Spacer()
             }
+            .toolbar(.hidden, for: .tabBar) 
             .background(Color(.systemGray6))
             .ignoresSafeArea(edges: .bottom)
         }
     }
+    
     // MARK: - Helper
     func formatDate(_ date: Date?) -> String {
         guard let d = date else { return "No date" }
@@ -159,6 +158,39 @@ struct ViewPointView: View {
         f.dateStyle = .long
         return f.string(from: d)
     }
+    
+    // MARK: - Dynamic Transaction Title
+    func titleFor(transaction t: Transaction) -> String {
+        switch t.transaction_type {
+        case "TOP UP":
+            return "Top Up Berhasil"
+        case "REWARD SURVEY":
+            return t.transaction_description ?? "Reward Survey"
+        case "COST SURVEY":
+            return t.transaction_description ?? "Biaya Membuat Survey"
+        case "WITHDRAW":
+            return "Withdraw Poin"
+        default:
+            return t.transaction_description ?? "Transaction"
+        }
+    }
+
+    // MARK: - Icon Picker
+    func iconFor(type: String) -> String {
+        switch type {
+        case "TOP UP":
+            return "arrow.up.circle.fill"
+        case "REWARD SURVEY":
+            return "gift.fill"
+        case "COST SURVEY":
+            return "minus.circle.fill"
+        case "WITHDRAW":
+            return "arrow.down.circle.fill"
+        default:
+            return "dollarsign.circle.fill"
+        }
+    }
+
 }
 struct TransactionRow_UI: View {
     var icon: String

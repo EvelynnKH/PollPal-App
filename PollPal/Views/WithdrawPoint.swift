@@ -2,6 +2,8 @@ import SwiftUI
 struct WithdrawPoint: View {
     @State private var selectedMethod: String = "OVO"
     @State private var navigateToSuccess: Bool = false
+    @State private var selectedAmount: Double = 0 // NEW: user-typed amount
+    @State private var showAlert: Bool = false // validation alert
     
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -13,13 +15,16 @@ struct WithdrawPoint: View {
         Int(loggedInUser.first?.user_point ?? 0)
     }
     
+    // Computed property for dynamic Rp value
+    private var rupiahValue: Int {
+        Int(selectedAmount * 10) // 1 point = 100 Rp
+    }
+    
     // MARK: - Init to fetch current user
     init() {
-        // Get logged-in user UUID from UserDefaults
         let userIDString = UserDefaults.standard.string(forKey: "logged_in_user_id") ?? ""
         let userUUID = UUID(uuidString: userIDString) ?? UUID()
         
-        // FetchRequest for current user
         _loggedInUser = FetchRequest(
             sortDescriptors: [],
             predicate: NSPredicate(format: "user_id == %@", userUUID as CVarArg)
@@ -37,19 +42,30 @@ struct WithdrawPoint: View {
                     .padding(.top, 35)
                     .padding(.horizontal)
                     .padding(.bottom, 15)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
                 // MARK: Points Card
                 VStack(alignment: .center, spacing: 12) {
                     
-                    Text("My Points")
+                    Text("You have \(points) points")
                         .font(.headline)
                         .foregroundColor(.darkTeal)
                     
-                    Text(formatCurrency(points))
-                        .font(.system(size: 46, weight: .bold))
+                    TextField("Enter amount", value: $selectedAmount, formatter: NumberFormatter.decimalFormatter)
+                        .keyboardType(.numberPad)                   // only numeric keyboard
+                        .multilineTextAlignment(.center)           // center text
+                        .keyboardType(.numberPad)
+                        .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.darkTeal)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(12)
                     
-                    Text("You will receive Rp. \(formatCurrency(points)) !")
+                    
+                    
+                    // Dynamic Rp display
+                    Text("Enter amount to withdraw")
                         .font(.body)
                         .foregroundColor(.darkTeal)
                     
@@ -109,10 +125,45 @@ struct WithdrawPoint: View {
                 
                 Spacer()
                 
+                HStack(spacing: 8) {
+                    Text("Total Received:")
+                        .font(.title2)
+                        .foregroundColor(.darkTeal)
+                    Spacer()
+                    Text("Rp \(rupiahValue.formattedWithSeparator())")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.darkTeal)
+                }
+                .padding(.horizontal)
+                .padding(.bottom,10)
                 // MARK: Bottom Button
                 VStack {
                     Button(action: {
-                        navigateToSuccess = true 
+                        if selectedAmount > Double(points) {
+                                showAlert = true
+                            } else {
+                                if let user = loggedInUser.first {
+                                    user.user_point -= Int32(selectedAmount) // update points
+                                    
+                                    // Create transaction record
+                                    let trans = Transaction(context: viewContext)
+                                    trans.transaction_id = UUID()
+                                    trans.transaction_point_change = Int32(selectedAmount)
+                                    trans.transaction_description = "Withdraw Berhasil"
+                                    trans.transaction_status_del = false
+                                    trans.owned_by_user = user
+                                    trans.transaction_created_at = Date()
+                                    trans.transaction_type = "WITHDRAW"
+                                    
+                                    do {
+                                        try viewContext.save() // save points and transaction
+                                        navigateToSuccess = true
+                                    } catch {
+                                        print("❌ Failed to save withdraw and transaction: \(error.localizedDescription)")
+                                    }
+                                }
+                            }
                     }) {
                         Text("Confirm Withdraw")
                             .font(.system(size: 22, weight: .semibold))
@@ -124,19 +175,29 @@ struct WithdrawPoint: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 25)
-                    
-                    // MARK: NavigationDestination (iOS 16+)
+                    .alert("Insufficient points", isPresented: $showAlert) {
+                        Button("OK", role: .cancel) {}
+                    }
                     .navigationDestination(isPresented: $navigateToSuccess) {
                         SuccessWithdrawView()
                             .navigationBarBackButtonHidden(true)
                     }
                 }
             }
+            .toolbar(.hidden, for: .tabBar)
             .padding(.bottom, 40)
             .padding(.horizontal, 10)
             .background(Color(.systemGray6))
             .ignoresSafeArea(edges: .bottom)
         }
+    }
+}
+
+extension Int {
+    func formattedWithSeparator() -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
     }
 }
 
