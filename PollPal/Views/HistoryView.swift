@@ -21,50 +21,75 @@ struct HistoryView: View {
     var body: some View {
         VStack(spacing: 0) {
             
-            // Search Bar Placeholder (Sesuai kode aslimu)
-            // TextField("Search...", text: .constant("")) ...
-            
-            ScrollView {
-                VStack(spacing: 16) {
+            // LOGIKA UTAMA: Cek apakah data kosong?
+            if viewModel.historyItems.isEmpty {
+                
+                // --- TAMPILAN FULL SCREEN EMPTY STATE ---
+                VStack(spacing: 20) {
+                    Spacer()
                     
-                    if viewModel.historyItems.isEmpty {
-                        // Empty State
-                        VStack {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 50))
-                                .foregroundColor(.gray)
-                                .padding()
-                            Text("Belum ada riwayat survei")
-                                .foregroundColor(.gray)
-                        }
-                        .padding(.top, 50)
-                    } else {
-                        // Data dari ViewModel
+                    // 1. Ilustrasi Ikon
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: "0C4254").opacity(0.1))
+                            .frame(width: 150, height: 150)
+                        
+                        Image(systemName: "list.clipboard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 70, height: 70)
+                            .foregroundColor(Color(hex: "0C4254"))
+                    }
+                    .padding(.bottom, 10)
+                    
+                    // 2. Teks Informatif
+                    Text("No History Yet")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(Color(hex: "0C4254"))
+                    
+                    Text("You haven't participated in any surveys.\nStart now to earn points!")
+                        .font(.body)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    
+                    Spacer()
+                }
+                // KUNCI PERUBAHAN DISINI:
+                .frame(maxWidth: .infinity, maxHeight: .infinity) // Paksa memenuhi layar
+                .background(Color(hex: "#EFEFEF")) // Warna background diaplikasikan disini
+                
+            } else {
+                
+                // --- TAMPILAN LIST (JIKA ADA DATA) ---
+                ScrollView {
+                    VStack(spacing: 16) {
                         ForEach(viewModel.historyItems) { item in
                             SurveyCard(item: item)
                         }
                     }
+                    .padding()
                 }
-                .padding()
+                .background(Color(hex: "#EFEFEF")) // Background untuk list juga sama
             }
-            
-            Spacer()
         }
-        .background(Color(hex: "#EFEFEF"))
-        .ignoresSafeArea(edges: .bottom)
+        .background(Color(hex: "#EFEFEF")) // Safety net: Background container utama
         .onAppear {
-            viewModel.fetchHistory() // Refresh data saat muncul
+            viewModel.fetchHistory()
         }
     }
 }
 
+// ... (Struct SurveyCard tetap sama) ...
+
 // Komponen Card dipisah agar rapi
 struct SurveyCard: View {
     let item: HistoryItem
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            
+
             // User owner
             HStack {
                 Image(systemName: "person.crop.circle")
@@ -73,15 +98,15 @@ struct SurveyCard: View {
                     .foregroundColor(.orange)
                     .fontWeight(.semibold)
             }
-            
+
             // Survey Title
             Text(item.title)
                 .font(.body)
-                .foregroundColor(Color(hex:"#0C4254"))
+                .foregroundColor(Color(hex: "#0C4254"))
                 .fixedSize(horizontal: false, vertical: true)
                 .fontWeight(.bold)
                 .padding(.vertical)
-            
+
             // Status section
             HStack {
                 // Category Loop
@@ -94,9 +119,9 @@ struct SurveyCard: View {
                         .foregroundColor(.black)
                         .cornerRadius(10)
                 }
-                
+
                 Spacer()
-                
+
                 // Status Logic
                 if item.status == .inProgress {
                     Text("Continue..")
@@ -113,7 +138,7 @@ struct SurveyCard: View {
                 }
             }
             .padding(.top, 4)
-            
+
         }
         .padding()
         .background(Color.white)

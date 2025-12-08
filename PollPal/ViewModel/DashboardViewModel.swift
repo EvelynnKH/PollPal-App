@@ -27,9 +27,7 @@ class DashboardViewModel: ObservableObject {
     
     private var viewContext: NSManagedObjectContext
     
-    // --- PERUBAHAN UTAMA DISINI ---
-    // 1. Hapus variable hardcode 'targetUserName'
-    // 2. Buat Computed Property untuk mengambil ID dari UserDefaults
+    // Ambil ID User yang login
     private var currentUserUUID: UUID? {
         if let idString = UserDefaults.standard.string(forKey: "logged_in_user_id") {
             return UUID(uuidString: idString)
@@ -43,28 +41,55 @@ class DashboardViewModel: ObservableObject {
     }
     
     func fetchAllData() {
-        // Cek dulu apakah ada user login?
+        // Cek user login
         if currentUserUUID != nil {
             fetchUserData()
-            fetchOngoingSurveys() // Hanya fetch ongoing jika ada user
+            fetchOngoingSurveys()
         } else {
             print("⚠️ Tidak ada user login (Guest Mode)")
             self.userName = "Guest"
             self.userPoints = 0
         }
         
-        // Data umum (tetap diambil meski Guest)
         fetchCategories()
-        fetchPopularSurveys()
+        fetchPopularSurveys() // Logic filter baru diterapkan disini
     }
     
-    // MARK: - 1. Fetch User (By UUID)
+    // MARK: - HELPER: Base Predicates
+    // Fungsi ini membuat filter dasar agar tidak perlu tulis ulang di Search & Popular
+    private func getBasePredicates() -> [NSPredicate] {
+        // 1. Syarat Wajib: Public & Tidak Dihapus
+        var predicates: [NSPredicate] = [
+            NSPredicate(format: "is_public == YES"),
+            NSPredicate(format: "survey_status_del == NO")
+        ]
+        
+        // 2. Syarat User (Jika Login)
+        if let myID = currentUserUUID {
+            
+            // A. Jangan tampilkan survei milik sendiri (Creator tidak isi survei sendiri)
+            let notMinePredicate = NSPredicate(format: "owned_by_user.user_id != %@", myID as CVarArg)
+            predicates.append(notMinePredicate)
+            
+            // B. Jangan tampilkan survei yang SUDAH diisi (History)
+            // Logic: Cari Survey dimana jumlah HResponse dari user ini adalah 0
+            // has_hresponse     = Relasi di Survey ke HResponse
+            // is_filled_by_user = Relasi di HResponse ke User
+            let notFilledPredicate = NSPredicate(
+                format: "SUBQUERY(has_hresponse, $resp, $resp.is_filled_by_user.user_id == %@).@count == 0",
+                myID as CVarArg
+            )
+            predicates.append(notFilledPredicate)
+        }
+        
+        return predicates
+    }
+    
+    // MARK: - 1. Fetch User
     private func fetchUserData() {
         guard let myID = currentUserUUID else { return }
 
         let request: NSFetchRequest<User> = User.fetchRequest()
-        
-        // GANTI PREDICATE: Cari berdasarkan user_id (UUID), bukan user_name
         request.predicate = NSPredicate(format: "user_id == %@", myID as CVarArg)
         request.fetchLimit = 1
         
@@ -73,14 +98,13 @@ class DashboardViewModel: ObservableObject {
             if let user = results.first {
                 self.userName = user.user_name ?? "Unknown"
                 self.userPoints = Int(user.user_point)
-                print("✅ Dashboard loaded for: \(self.userName)")
             }
         } catch {
             print("❌ Error fetching user: \(error.localizedDescription)")
         }
     }
     
-    // MARK: - 2. Fetch Categories (Tetap Sama)
+    // MARK: - 2. Fetch Categories
     private func fetchCategories() {
         let request: NSFetchRequest<Category> = Category.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "category_name", ascending: true)]
@@ -92,13 +116,18 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
-    // MARK: - 3. Fetch Popular Surveys (Tetap Sama)
+    // MARK: - 3. Fetch Popular Surveys (Updated Filter)
     private func fetchPopularSurveys() {
         let request: NSFetchRequest<Survey> = Survey.fetchRequest()
-        let p1 = NSPredicate(format: "is_public == YES")
-        let p2 = NSPredicate(format: "survey_status_del == NO")
-        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [p1, p2])
+        
+        // Ambil filter dasar (Public + Active + Not Mine + Not Filled)
+        let predicates = getBasePredicates()
+        
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         request.fetchLimit = 5
+        
+        // Opsional: Sortir berdasarkan reward terbesar atau tanggal terbaru
+        request.sortDescriptors = [NSSortDescriptor(key: "survey_created_at", ascending: false)]
         
         do {
             self.popularSurveys = try viewContext.fetch(request)
@@ -107,14 +136,12 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
-    // MARK: - 4. Fetch Ongoing Surveys (By UUID)
+    // MARK: - 4. Fetch Ongoing Surveys
     private func fetchOngoingSurveys() {
         guard let myID = currentUserUUID else { return }
 
         let request: NSFetchRequest<HResponse> = HResponse.fetchRequest()
         
-        // GANTI PREDICATE: Filter berdasarkan user_id (UUID)
-        // Masuk ke relationship 'is_filled_by_user' -> property 'user_id'
         let pUser = NSPredicate(format: "is_filled_by_user.user_id == %@", myID as CVarArg)
         let pNotSubmitted = NSPredicate(format: "submitted_at == NIL")
         
@@ -127,7 +154,7 @@ class DashboardViewModel: ObservableObject {
             for hRes in hResponses {
                 guard let survey = hRes.in_survey else { continue }
                 
-                // Hitung Progress (Pastikan Relationship has_dresponse Type: To Many)
+                // Pastikan nama relasi 'has_question' benar (sesuai DataSeeder Anda sebelumnya: has_question)
                 let questions = survey.has_question as? Set<Question> ?? []
                 let totalQuestions = max(questions.count, 1)
                 
@@ -145,7 +172,7 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
-    // MARK: - 5. Search Logic (Tetap Sama)
+    // MARK: - 5. Search Logic (Updated Filter)
     private func filterSurveys() {
         if searchText.isEmpty {
             searchResults = []
@@ -153,11 +180,15 @@ class DashboardViewModel: ObservableObject {
         }
         
         let request: NSFetchRequest<Survey> = Survey.fetchRequest()
-        let p1 = NSPredicate(format: "is_public == YES")
-        let p2 = NSPredicate(format: "survey_status_del == NO")
-        let pSearch = NSPredicate(format: "survey_title CONTAINS[cd] %@", searchText)
         
-        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [p1, p2, pSearch])
+        // Ambil filter dasar (Public + Active + Not Mine + Not Filled)
+        var predicates = getBasePredicates()
+        
+        // Tambahkan filter kata kunci pencarian
+        let pSearch = NSPredicate(format: "survey_title CONTAINS[cd] %@", searchText)
+        predicates.append(pSearch)
+        
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         
         do {
             self.searchResults = try viewContext.fetch(request)
