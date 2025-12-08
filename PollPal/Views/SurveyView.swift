@@ -9,30 +9,34 @@ struct SurveyView: View {
     @ObservedObject var survey: Survey
     @State private var showingImagePicker = false
     @State private var selectedImage: UIImage?
-    @State private var mode: String = "create"
+    let mode: String
+    @State private var tempTitle: String = ""
 
     init(mode: String, survey: Survey?, context: NSManagedObjectContext) {
-        self.mode = mode
+            self.mode = mode   // <-- SET VALUE
 
-        let surveyToUse: Survey
+            let surveyToUse: Survey
 
-        if mode == "create" {
-            let newSurvey = Survey(context: context)
-            newSurvey.survey_id = UUID()
-            newSurvey.survey_created_at = Date()
-            surveyToUse = newSurvey  // ✔ surveyToUse aman
-        } else {
-            surveyToUse = survey!  // ✔ juga aman
-        }
+            if mode == "create" {
+                let newSurvey = Survey(context: context)
+                newSurvey.survey_id = UUID()
+                newSurvey.survey_created_at = Date()
+                surveyToUse = newSurvey
+            } else {
+                surveyToUse = survey!   // <-- untuk edit
+            }
 
-        self.survey = surveyToUse  // ✔ stored property SURVEY terisi
-        _vm = StateObject(
-            wrappedValue: SurveyViewModel(
-                context: context,
-                survey: surveyToUse
+            self.survey = surveyToUse
+
+            _vm = StateObject(
+                wrappedValue: SurveyViewModel(
+                    context: context,
+                    survey: surveyToUse
+                )
             )
-        )  // ✔ stored property VM terisi
-    }
+        self._tempTitle = State(initialValue: surveyToUse.survey_title ?? "")
+
+        }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -114,24 +118,30 @@ struct SurveyView: View {
 
             // TITLE + DESCRIPTION
             VStack(alignment: .leading, spacing: 5) {
+                
+                ZStack(alignment: .topLeading) {
+                    if (survey.survey_title ?? "").isEmpty {
+                        Text("Enter Your Survey Title")
+                            .foregroundColor(.gray)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 12)
+                    }
 
-                TextEditor(
-                    text: Binding(
-                        get: {
-                            survey.survey_title ?? "Enter Your Survey Title"
-                        },
-                        set: { survey.survey_title = $0 }
-                    )
-                )
-                .font(.title)
-                .fontWeight(.semibold)
+                    TextEditor(text: $tempTitle)
+                        .font(.title)
+                        .fontWeight(.semibold)
+                        .padding(4)
+                        .onChange(of: tempTitle) { newValue in
+                            survey.survey_title = newValue
+                        }
+
+                }
                 .frame(minHeight: 40, maxHeight: 120)
-                .padding(4)
                 .background(
-                    RoundedRectangle(cornerRadius: 8).stroke(
-                        Color.gray.opacity(0.3)
-                    )
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.3))
                 )
+
 
                 ZStack(alignment: .topLeading) {
                     if (survey.survey_description

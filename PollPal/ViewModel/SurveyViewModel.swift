@@ -45,14 +45,42 @@ class SurveyViewModel: ObservableObject {
         loadQuestions()
     }
     
+    func createSurveyIfNeeded() {
+        if survey.survey_created_at == nil {
+            survey.survey_created_at = Date()
+            survey.survey_id = UUID()
+        }
+    }
+    
     func saveSurvey() {
         survey.is_public = false
+
+        if survey.owned_by_user == nil {
+            if let uuidString = UserDefaults.standard.string(forKey: "logged_in_user_id"),
+               let uuid = UUID(uuidString: uuidString) {
+                let req: NSFetchRequest<User> = User.fetchRequest()
+                req.predicate = NSPredicate(format: "user_id == %@", uuid as CVarArg)
+                if let u = try? context.fetch(req).first {
+                    survey.owned_by_user = u
+                }
+            }
+        }
         saveContext()
         printSurveyAttributes()
     }
 
     func publishSurvey() {
         survey.is_public = true
+        if survey.owned_by_user == nil {
+            if let uuidString = UserDefaults.standard.string(forKey: "logged_in_user_id"),
+               let uuid = UUID(uuidString: uuidString) {
+                let req: NSFetchRequest<User> = User.fetchRequest()
+                req.predicate = NSPredicate(format: "user_id == %@", uuid as CVarArg)
+                if let u = try? context.fetch(req).first {
+                    survey.owned_by_user = u
+                }
+            }
+        }
         saveContext()
         printSurveyAttributes()
     }
@@ -75,8 +103,50 @@ class SurveyViewModel: ObservableObject {
         print("Updated At: \(String(describing: survey.survey_updated_at))")
         print("Is Public: \(survey.is_public)")
         print("Is Deleted: \(survey.survey_status_del)")
+
+        if let owner = survey.owned_by_user {
+            print("Owned Oleh ->")
+            print("   User ID: \(owner.user_id?.uuidString ?? "nil")")
+            print("   User Name: \(owner.user_name ?? "nil")")
+        } else {
+            print("Owned Oleh: nil (❌ belum pernah diset)")
+        }
+
+        let active = fetchActiveSurveys()
+        print("Active Surveys Count: \(active.count)")
         print("------------------------------------")
     }
+
+   
+    @Published var activeSurveys: [Survey] = []
+        
+    private func fetchActiveSurveys() -> [Survey] {
+          let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+          
+          // ambil semua yg tidak deleted
+          req.predicate = NSPredicate(format: "survey_status_del == NO")
+          req.sortDescriptors = [
+              NSSortDescriptor(keyPath: \Survey.survey_created_at, ascending: false)
+          ]
+          
+          do {
+              let result = try context.fetch(req)
+              self.activeSurveys = result
+              
+              print("📌 Active surveys count: \(result.count)")
+              for s in result {
+                  print(" → \(s.survey_title ?? "(no title)") | id=\(s.survey_id?.uuidString ?? "-")")
+              }
+              
+              return result
+          } catch {
+              print("❌ fetchActiveSurveys error:", error)
+              return []
+          }
+      }
+      
+
+
     
     func refreshSurvey() {
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
@@ -121,13 +191,6 @@ class SurveyViewModel: ObservableObject {
         } catch {
             print("Failed saving image:", error)
             return nil
-        }
-    }
-    
-    func createSurveyIfNeeded() {
-        if survey.survey_created_at == nil {
-            survey.survey_created_at = Date()
-            survey.survey_id = UUID()
         }
     }
     

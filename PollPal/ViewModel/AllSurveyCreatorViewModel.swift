@@ -58,11 +58,15 @@ class AllSurveyCreatorViewModel: ObservableObject {
         // Status filter
         switch selectedFilter {
         case .all: break
-        case .published: list = list.filter { $0.survey_rewards_points > 0 }
-        case .draft: list = list.filter { $0.survey_rewards_points == 0 }
-        case .finished: list = list.filter { $0.survey_status_del == true }
-        }
+        case .published:
+            print("📌 AllSurvey user:", currentUser.user_id!.uuidString)
 
+            list = list.filter { $0.is_public == true && $0.survey_status_del == false }
+        case .draft:
+            list = list.filter { $0.is_public == false && $0.survey_status_del == false }
+        case .finished:
+            list = list.filter { $0.survey_status_del == true}
+        }
         return list
     }
 }

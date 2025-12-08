@@ -8,6 +8,7 @@
 import CoreData
 import Foundation
 
+
 class DashboardCreatorViewModel: ObservableObject {
 
     @Published var user: User?
@@ -22,6 +23,30 @@ class DashboardCreatorViewModel: ObservableObject {
         self.context = context
         loadData()
     }
+    
+    
+    func debugAllSurveys() {
+        guard let user = self.user else { return }
+
+        let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+        req.predicate = NSPredicate(format: "owned_by_user == %@", user)
+
+        do {
+            let results = try context.fetch(req)
+
+            print("\n===== DEBUG ALL SURVEYS =====")
+            for s in results {
+                print("Title:", s.survey_title ?? "(no title)")
+                print("Deleted:", s.survey_status_del)
+                print("-------------------------")
+            }
+        } catch {
+            print("❌ error:", error)
+        }
+    }
+
+
+
 
     func loadData() {
         fetchUser()
@@ -35,7 +60,6 @@ class DashboardCreatorViewModel: ObservableObject {
     }
 
     private func fetchUser() {
-
         guard
             let uuidString = UserDefaults.standard.string(
                 forKey: "logged_in_user_id"
@@ -54,6 +78,9 @@ class DashboardCreatorViewModel: ObservableObject {
             if let user = try context.fetch(req).first {
                 self.user = user
                 self.points = Int(user.user_point)
+                
+                print("📌 Dashboard user:", user.user_id!.uuidString)
+
 
                 print("✅ Logged in user:", user.user_name ?? "")
                 print("✅ User ID:", uuid)
@@ -66,10 +93,12 @@ class DashboardCreatorViewModel: ObservableObject {
     // MARK: - ACTIVE SURVEY
     private func fetchActiveSurveys(for user: User) {
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+
         req.predicate = NSPredicate(
-            format: "survey_status_del == 0 AND owned_by_user == %@",
+            format: "is_public == true AND owned_by_user == %@",
             user
         )
+
         req.sortDescriptors = [
             NSSortDescriptor(
                 keyPath: \Survey.survey_created_at,
@@ -77,8 +106,12 @@ class DashboardCreatorViewModel: ObservableObject {
             )
         ]
 
-        self.activeSurveys = (try? context.fetch(req)) ?? []
+        let result = try? context.fetch(req)
+        print("FETCH RESULT:", result?.count ?? 0)
+
+        self.activeSurveys = result ?? []
     }
+
 
     // MARK: - DRAFT SURVEYS
     private func fetchDraftSurveys(for user: User) {
@@ -109,7 +142,12 @@ class DashboardCreatorViewModel: ObservableObject {
         }
 
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
-        req.predicate = NSPredicate(format: "survey_status_del == false AND owned_by_user == %@", user)
+
+        // PREDICATE FIXED
+        req.predicate = NSPredicate(
+            format: "(survey_status_del == false OR survey_status_del == nil) AND owned_by_user == %@",
+            user
+        )
 
         do {
             let count = try context.count(for: req)
@@ -122,6 +160,7 @@ class DashboardCreatorViewModel: ObservableObject {
             self.allSurveys = 0
         }
     }
+
 
     
     

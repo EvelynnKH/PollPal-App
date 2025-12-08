@@ -106,8 +106,21 @@ struct AllSurveyCreatorView: View {
     }
     // Helpers
     func surveyStatus(_ survey: Survey) -> String {
-        survey.survey_status_del ? "Finished" : "Published"
+
+        // 1. FINISHED (deleted)
+        if survey.survey_status_del {
+            return "Finished"
+        }
+
+        // 2. PUBLISHED (not deleted + published)
+        if survey.is_public {
+            return "Published"
+        }
+
+        // 3. DRAFT (not deleted + not published)
+        return "Draft"
     }
+
 
     //      func surveyTags(_ survey: Survey) -> [String] {
     //          if let categories = survey.has_category as? Set<Category> {

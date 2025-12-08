@@ -109,10 +109,18 @@ struct DashboardCreatorView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(vm.draftSurveys, id: \.self) { survey in
-                                DraftCard(
-                                    title: survey.survey_title ?? "Untitled",
-                                    subtitle: "(Draft)"
-                                )
+                                NavigationLink(
+                                    destination: SurveyView(
+                                        mode: "edit",
+                                        survey: survey,
+                                        context: viewContext
+                                    )
+                                ) {
+                                    DraftCard(
+                                        title: survey.survey_title ?? "Untitled",
+                                        subtitle: "(Draft)"
+                                    )
+                                }
                             }
                         }
                     }
@@ -133,7 +141,10 @@ struct DashboardCreatorView: View {
                     EmptyView()
                 }
             }
+        }.onAppear {
+            vm.debugAllSurveys()
         }
+
     }
 }
 // MARK: - COMPONENTS
