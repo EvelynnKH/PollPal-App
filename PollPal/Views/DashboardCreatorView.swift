@@ -9,50 +9,43 @@ import CoreData
 import SwiftUI
 
 struct DashboardCreatorView: View {
-
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var vm: DashboardCreatorViewModel
     @State private var navigationPath: [String] = []
     @ObservedObject private var viewModel: DashboardViewModel
-
+    @State private var tempSurvey: Survey?
     init(context: NSManagedObjectContext) {
-            // StateObject
-            _vm = StateObject(wrappedValue: DashboardCreatorViewModel(context: context))
-
-            // default values untuk property lain:
-            _navigationPath = State(initialValue: [])
-
-            // viewModel HARUS di-init juga
-            self.viewModel = DashboardViewModel(context: context)
-        }
-
+        // StateObject
+        _vm = StateObject(
+            wrappedValue: DashboardCreatorViewModel(context: context)
+        )
+        // default values untuk property lain:
+        _navigationPath = State(initialValue: [])
+        // viewModel HARUS di-init juga
+        self.viewModel = DashboardViewModel(context: context)
+    }
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-
                     // MARK: - HEADER
                     Text("Hello, \(viewModel.userName ?? "Creator")")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(Color(hex: "1F3A45"))
-
                     // MARK: - STATS ROW
                     HStack(spacing: 5) {
                         StatCardView(
                             number: "\(vm.totalResponses)",
                             label: "Responses"
                         )
-
                         StatCardView(
-                            number: "\(vm.activeSurveys.count)",
+                            number: "\(vm.allSurveys)",
                             label: "All Surveys",
                             showMore: true,
                             onMoreTap: {
                                 navigationPath.append("AllSurveyCreatorView")
                             }
-
                         )
-
                         StatCardView(
                             number: "\(vm.points)",
                             label: "Points",
@@ -62,34 +55,42 @@ struct DashboardCreatorView: View {
                             }
                         )
                     }
-
                     // MARK: - ACTION BUTTONS
                     HStack(spacing: 10) {
                         NavigationLink(
-                            destination: SurveyView(
-                                mode: "create",
-                                survey: {
-                                    let s = Survey(context: viewContext)
-                                    s.survey_id = UUID()
-                                    return s
-                                }(),
-                                context: viewContext
-                            )
+                            destination: {
+                                if let s = tempSurvey {
+                                    SurveyView(
+                                        mode: "create",
+                                        survey: s,
+                                        context: viewContext
+                                    )
+                                } else {
+                                    EmptyView()
+                                }
+                            }
                         ) {
                             ActionButton(
                                 icon: "plus",
                                 text: "Create New Survey"
                             )
                         }
-
+                        .simultaneousGesture(
+                            TapGesture().onEnded {
+                                let s = Survey(context: viewContext)
+                                s.survey_id = UUID()
+                                s.survey_created_at = Date()
+                                s.survey_status_del = false
+                                s.is_public = false
+                                tempSurvey = s
+                            }
+                        )
                         ActionButton(icon: "bell", text: "Notifications (23)")
                     }
-
                     // MARK: - ACTIVE SURVEYS
                     Text("Active Surveys")
                         .font(.title2.bold())
                         .foregroundColor(Color(hex: "1F3A45"))
-
                     VStack(spacing: 16) {
                         ForEach(vm.activeSurveys, id: \.self) { survey in
                             ActiveSurveyCard(
@@ -101,12 +102,10 @@ struct DashboardCreatorView: View {
                     .padding()
                     .background(Color.orange)
                     .cornerRadius(28)
-
                     // MARK: - DRAFTS
                     Text("Drafts")
                         .font(.title2.bold())
                         .foregroundColor(Color(hex: "1F3A45"))
-
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(vm.draftSurveys, id: \.self) { survey in
@@ -117,33 +116,26 @@ struct DashboardCreatorView: View {
                             }
                         }
                     }
-
                     Spacer()
                 }
                 .padding(.horizontal)
             }
             .navigationDestination(for: String.self) { route in
                 switch route {
-
                 case "AllSurveyCreatorView":
                     AllSurveyCreatorView(
                         context: viewContext,
-                        currentUser: vm.user! 
+                        currentUser: vm.user!
                     )
-
                 case "pointsPage":
                     Text("Points Detail Page")  // <-- ganti nanti
-
                 default:
                     EmptyView()
                 }
             }
-
         }
-
     }
 }
-
 // MARK: - COMPONENTS
 //
 // STAT CARD
@@ -152,7 +144,6 @@ struct StatCardView: View {
     var label: String
     var showMore: Bool = false
     var onMoreTap: (() -> Void)? = nil
-
     var body: some View {
         VStack(spacing: 6) {
             Text(label)
@@ -179,12 +170,10 @@ struct StatCardView: View {
         .cornerRadius(16)
     }
 }
-
 // ACTION BUTTON
 struct ActionButton: View {
     var icon: String
     var text: String
-
     var body: some View {
         VStack(alignment: .leading) {
             HStack(spacing: 25) {
@@ -201,23 +190,18 @@ struct ActionButton: View {
         }
     }
 }
-
 // ACTIVE SURVEY CARD
 struct ActiveSurveyCard: View {
     var title: String
     var responses: Int
-
     var body: some View {
         HStack {
             Image(systemName: "doc.text.fill")
                 .foregroundColor(Color(hex: "1F3A45"))
-
             Text(title)
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "1F3A45"))
-
             Spacer()
-
             Text("\(responses) Responses")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "1F3A45"))
@@ -227,18 +211,15 @@ struct ActiveSurveyCard: View {
         .cornerRadius(22)
     }
 }
-
 // DRAFT CARD
 struct DraftCard: View {
     var title: String
     var subtitle: String
-
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundColor(Color(hex: "1F3A45"))
-
             Text(subtitle)
                 .font(.system(size: 16))
                 .foregroundColor(.gray)
