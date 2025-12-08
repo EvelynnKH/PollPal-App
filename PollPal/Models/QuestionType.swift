@@ -13,6 +13,7 @@ enum QuestionType: String, CaseIterable, Identifiable {
     case multipleChoice
     case checkboxes
     case dropdown
+    case linearscale
 
     var id: String { self.rawValue }
 }

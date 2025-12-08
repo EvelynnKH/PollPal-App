@@ -8,6 +8,10 @@ import SwiftUI
 import PhotosUI
 
 struct FinishingSurveyView: View {
+    @Environment(\.managedObjectContext) private var context
+    @ObservedObject var vm: SurveyViewModel
+    @Environment(\.dismiss) var dismiss
+    
     // MARK: - Color theme
     let orange = Color(red: 254 / 255, green: 152 / 255, blue: 42 / 255)
     let DarkTeal = Color(red: 12 / 255, green: 66 / 255, blue: 84 / 255)
@@ -185,22 +189,66 @@ struct FinishingSurveyView: View {
                     }
                     .padding(.horizontal)
                     
-                    
-                    // PUBLISH BUTTON
-                    Button(action: {
-                        print("Publish tapped")
-                    }) {
-                        Text("Publish")
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(orange)
-                            .cornerRadius(15)
+                    HStack {
+                        // SAVE BUTTON
+                        Button(action: {
+                            survey.survey_updated_at = Date()
+                            vm.saveSurvey()   // <— simpan via view model
+
+                            do {
+                                try context.save()
+                                print("Survey saved!")
+                                print("SAVED:", survey.objectID)
+                                
+                                vm.reset()
+                                dismiss()
+                            } catch {
+                                print("Failed to save survey: \(error)")
+                            }
+
+                        }) {
+                            Text("Save")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(orange)
+                                .cornerRadius(15)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 30)
+                        
+
+                        // PUBLISH BUTTON
+                        Button(action: {
+                            survey.is_public = true      // <– set public
+                            survey.survey_updated_at = Date()
+
+                            vm.publishSurvey()      // <– tetap save via VM
+
+                            do {
+                                try context.save()
+                                print("Survey published & saved!")
+                                
+                                vm.reset()
+                                dismiss()
+                            } catch {
+                                print("Failed to save survey: \(error)")
+                            }
+
+                        }) {
+                            Text("Publish")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(orange)
+                                .cornerRadius(15)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 30)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 30)
-                    
+
                 }
                 .padding(.vertical, 20)
                 .padding(.horizontal, 10)

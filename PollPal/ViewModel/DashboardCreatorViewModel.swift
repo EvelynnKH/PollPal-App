@@ -50,7 +50,7 @@ class DashboardCreatorViewModel: ObservableObject {
     
     private func fetchDraftSurveys() {
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
-        req.predicate = NSPredicate(format: "survey_status_del == 1")
+        req.predicate = NSPredicate(format: "is_public = %@", NSNumber(booleanLiteral: false))
 
         self.draftSurveys = (try? context.fetch(req)) ?? []
     }
@@ -60,4 +60,6 @@ class DashboardCreatorViewModel: ObservableObject {
         let results = (try? context.fetch(req)) ?? []
         self.totalResponses = results.count
     }
+    
+    
 }
