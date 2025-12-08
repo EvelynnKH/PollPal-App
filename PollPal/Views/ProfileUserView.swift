@@ -6,12 +6,16 @@
 //
 
 import CoreData
+import PhotosUI
 import SwiftUI
 
 struct ProfileUserView: View {
     // Inject Context & ViewModel
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel: ProfileUserViewModel
+
+    @State private var selectedHeaderItem: PhotosPickerItem?  // Khusus Header
+    @State private var selectedProfileItem: PhotosPickerItem?  // Khusus Profile
 
     // Custom Init
     init(context: NSManagedObjectContext) {
@@ -60,8 +64,9 @@ struct ProfileUserView: View {
                     .padding(.vertical, 4)
 
                     // 2. Change Password
-                    NavigationLink(destination: ChangePasswordView(context: viewContext))
-                    {
+                    NavigationLink(
+                        destination: ChangePasswordView(context: viewContext)
+                    ) {
                         Label {
                             Text("Change Password")
                                 .fontWeight(.medium)
@@ -111,12 +116,36 @@ struct ProfileUserView: View {
             .onAppear {
                 viewModel.fetchUserProfile()
             }
+            // 1. Listener Khusus Header
+            .onChange(of: selectedHeaderItem) { _, newItem in
+                if let item = newItem {
+                    viewModel.updateHeaderImage(item: item)
+
+                    // Reset secara Async agar tidak bentrok dengan UI refresh
+                    DispatchQueue.main.async {
+                        selectedHeaderItem = nil
+                    }
+                }
+            }
+
+            // 2. Listener Khusus Profile
+            .onChange(of: selectedProfileItem) { _, newItem in
+                if let item = newItem {
+                    viewModel.updateProfileImage(item: item)
+
+                    // Reset secara Async
+                    DispatchQueue.main.async {
+                        selectedProfileItem = nil
+                    }
+                }
+            }
+            
             // Alert Logout
             .alert("Log Out", isPresented: $showLogOutAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Log Out", role: .destructive) {
                     UserDefaults.standard.set(nil, forKey: "logged_in_user_id")
-                    
+
                 }
             } message: {
                 Text("Are you sure you want to log out?")
@@ -131,21 +160,34 @@ extension ProfileUserView {
     // 1. Header Image
     var headerSection: some View {
         ZStack(alignment: .bottomTrailing) {
-            Image(viewModel.userHeaderImage)
-                .resizable()
-                .scaledToFill()
+            if let newHeader = viewModel.uiHeaderImage {
+                Image(uiImage: newHeader)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 220)
+                    .clipped()
+                    .cornerRadius(24, corners: [.bottomLeft, .bottomRight])
+            } else {
+                SmartImageView(
+                    imageName: viewModel.userHeaderImage,
+                    fallbackImage: "mountain"
+                )
                 .frame(height: 220)
                 .clipped()
                 .cornerRadius(24, corners: [.bottomLeft, .bottomRight])
+            }
 
-            // Tombol Edit Header (Hanya Visual)
-            Image(systemName: "pencil")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.gray)
-                .padding(8)
-                .background(Color.white.opacity(0.8))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .padding(16)
+            // TOMBOL PENSIL (Pakai PhotosPicker)
+            PhotosPicker(selection: $selectedHeaderItem, matching: .images) {
+                Image(systemName: "pencil")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.gray)
+                    .padding(8)
+                    .background(Color.white.opacity(0.8))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.borderless)  // <--- TAMBAHKAN INI (PENTING!)
+            .padding(16)
         }
     }
 
@@ -154,42 +196,52 @@ extension ProfileUserView {
         VStack(spacing: 4) {
             // Avatar
             ZStack(alignment: .bottomTrailing) {
-                Image(viewModel.userProfileImage)
-                    .resizable()
-                    .scaledToFill()
+                if let newProfile = viewModel.uiProfileImage {
+                    Image(uiImage: newProfile)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 110, height: 110)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(darkTeal, lineWidth: 3))
+                        .background(Circle().fill(Color.white))
+                } else {
+                    SmartImageView(
+                        imageName: viewModel.userProfileImage,
+                        fallbackImage: "cat"
+                    )
                     .frame(width: 110, height: 110)
                     .clipShape(Circle())
-                    .overlay(
-                        Circle().stroke(darkTeal, lineWidth: 3)
-                    )
+                    .overlay(Circle().stroke(darkTeal, lineWidth: 3))
                     .background(Circle().fill(Color.white))
+                }
 
-                // Ikon pensil visual saja
-                Image(systemName: "pencil")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.gray)
-                    .padding(6)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .shadow(radius: 2)
-                    .offset(x: 5, y: 0)
+                // TOMBOL PENSIL (Pakai PhotosPicker)
+                PhotosPicker(selection: $selectedProfileItem, matching: .images)
+                {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.gray)
+                        .padding(6)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .shadow(radius: 2)
+                }
+                .buttonStyle(.borderless)  // <--- TAMBAHKAN INI (PENTING!)
+                .offset(x: 5, y: 0)
             }
             .offset(y: -50)
             .padding(.bottom, -40)
 
-            // Nama
+            // Nama & Interest (Tetap sama)
             Text(viewModel.userName)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(darkTeal)
 
-            // Interest
             Text("My Interest: \(viewModel.userInterests)")
                 .font(.subheadline)
                 .foregroundColor(darkTeal)
                 .padding(.bottom, 10)
-
-            // --- TOMBOL ADD MORE CATEGORY SUDAH DIHAPUS DISINI ---
         }
         .padding(.bottom, 24)
     }
@@ -214,7 +266,7 @@ extension ProfileUserView {
             .overlay(
                 RoundedRectangle(cornerRadius: 16).stroke(
                     darkTeal,
-                    lineWidth: 1.5
+                    lineWidth: 3.5
                 )
             )
             .cornerRadius(16)
@@ -236,7 +288,7 @@ extension ProfileUserView {
             .overlay(
                 RoundedRectangle(cornerRadius: 16).stroke(
                     darkTeal,
-                    lineWidth: 1.5
+                    lineWidth: 3.5
                 )
             )
             .cornerRadius(16)
