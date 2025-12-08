@@ -5,236 +5,269 @@
 //  Created by student on 01/12/25.
 //
 
-import SwiftUI
 import CoreData
+import SwiftUI
 
 struct ProfileUserView: View {
     // Inject Context & ViewModel
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel: ProfileUserViewModel
-    
-    // Custom Init untuk menyuntikkan context
+
+    // Custom Init
     init(context: NSManagedObjectContext) {
-        _viewModel = StateObject(wrappedValue: ProfileUserViewModel(context: context))
+        _viewModel = StateObject(
+            wrappedValue: ProfileUserViewModel(context: context)
+        )
     }
-    
-    let DarkTeal = Color(red: 12 / 255, green: 66 / 255, blue: 84 / 255)
-    let orange = Color(red: 254 / 255, green: 152 / 255, blue: 42 / 255)
-    
-    // Programmatic navigation states
-    @State private var navigateToHelp = false
-    @State private var navigateToSetting = false
-    @State private var navigateToDashboard = false
-    
+
+    // Colors
+    let darkTeal = Color(red: 12 / 255, green: 66 / 255, blue: 84 / 255)
+    let brandOrange = Color(red: 254 / 255, green: 152 / 255, blue: 42 / 255)
+
+    // State untuk Log Out
+    @State private var showLogOutAlert = false
+
     var body: some View {
-        VStack(spacing: 0) {
+        NavigationStack {
+            List {
+                // MARK: - SECTION 1: HEADER (Custom Visual)
+                // Kita masukkan Header sebagai item pertama list tanpa padding
+                Group {
+                    VStack(spacing: 0) {
+                        headerSection
+                        profileInfoSection
+                        statsCardsSection
+                    }
+                }
+                .listRowInsets(EdgeInsets())  // Hapus margin kiri-kanan agar Gambar Full Width
+                .listRowSeparator(.hidden)  // Hapus garis pemisah bawah
+
+                // MARK: - SECTION 2: MENU LIST
+                Section {
+                    // 1. Edit Profile
+                    NavigationLink(
+                        destination: EditProfileView(context: viewContext)
+                    ) {
+                        Label {
+                            Text("Edit Profile")
+                                .fontWeight(.medium)
+                                .foregroundColor(darkTeal)
+                        } icon: {
+                            Image(systemName: "person")
+                                .foregroundColor(darkTeal)
+                        }
+                    }
+                    .padding(.vertical, 4)
+
+                    // 2. Change Password
+                    NavigationLink(destination: ChangePasswordView(context: viewContext))
+                    {
+                        Label {
+                            Text("Change Password")
+                                .fontWeight(.medium)
+                                .foregroundColor(darkTeal)
+                        } icon: {
+                            Image(systemName: "key")
+                                .foregroundColor(darkTeal)
+                        }
+                    }
+                    .padding(.vertical, 4)
+
+                    // 3. Switch Role (Direct Link ke DashboardCreator)
+                    NavigationLink(
+                        destination: DashboardCreatorView(context: viewContext)
+                    ) {
+                        Label {
+                            Text("Switch Role")
+                                .fontWeight(.medium)
+                                .foregroundColor(darkTeal)
+                        } icon: {
+                            Image(systemName: "person.2.circle")
+                                .foregroundColor(darkTeal)
+                        }
+                    }
+                    .padding(.vertical, 4)
+
+                    // 4. Log Out (Button Merah)
+                    Button(action: {
+                        showLogOutAlert = true
+                    }) {
+                        Label {
+                            Text("Log Out")
+                                .fontWeight(.medium)
+                                .foregroundColor(.red)
+                        } icon: {
+                            Image(
+                                systemName: "rectangle.portrait.and.arrow.right"
+                            )
+                            .foregroundColor(.red)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .listStyle(.plain)  // Gaya List Polos (Putih Bersih)
+            .ignoresSafeArea(edges: .top)  // Gambar Header mentok atas
+            .onAppear {
+                viewModel.fetchUserProfile()
+            }
+            // Alert Logout
+            .alert("Log Out", isPresented: $showLogOutAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Log Out", role: .destructive) {
+                    UserDefaults.standard.set(nil, forKey: "logged_in_user_id")
+                    
+                }
+            } message: {
+                Text("Are you sure you want to log out?")
+            }
+        }
+    }
+}
+
+// MARK: - EXTENSIONS (Visual Header)
+extension ProfileUserView {
+
+    // 1. Header Image
+    var headerSection: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Image(viewModel.userHeaderImage)
+                .resizable()
+                .scaledToFill()
+                .frame(height: 220)
+                .clipped()
+                .cornerRadius(24, corners: [.bottomLeft, .bottomRight])
+
+            // Tombol Edit Header (Hanya Visual)
+            Image(systemName: "pencil")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.gray)
+                .padding(8)
+                .background(Color.white.opacity(0.8))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(16)
+        }
+    }
+
+    // 2. Profile Info
+    var profileInfoSection: some View {
+        VStack(spacing: 4) {
+            // Avatar
             ZStack(alignment: .bottomTrailing) {
-                Text(viewModel.userHeaderImage)
-                Image(viewModel.userHeaderImage) // Pastikan gambar ini ada di Assets
+                Image(viewModel.userProfileImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 230)
-                    .clipped()
-                    .opacity(0.7)
-                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 10)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                Button(action: {}) {
-                    Image(systemName: "pencil")
-                        .foregroundColor(.gray)
-                        .padding(10)
-                        .background(Color.white.opacity(0.8))
-                        .clipShape(Circle())
-                }
-                .padding(.trailing, 10)
-                .padding(.bottom, 10)
-            }
-            
-            HStack {
-                Spacer()
-                
-                Circle()
-                    .stroke(DarkTeal, lineWidth: 4)
-                    .frame(width: 140, height: 140)
-                    .background(Color.white)
+                    .frame(width: 110, height: 110)
                     .clipShape(Circle())
                     .overlay(
-                        // Placeholder image, nanti bisa diganti user_profile_img dari CoreData
-                        Image(viewModel.userProfileImage) // Pastikan gambar ini ada di Assets
-                            .resizable()
-                            .scaledToFill()
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 10)
-                            .frame(width: 132, height: 132)
+                        Circle().stroke(darkTeal, lineWidth: 3)
                     )
-                
-                Spacer()
-            }
-            .offset(y: -70)
-            
-            VStack {
-                // --- DATA DARI VIEW MODEL ---
-                Text(viewModel.userName) // Nama User Dinamis
-                    .font(.title)
-                    .padding(.top, -60)
-                    .foregroundColor(DarkTeal)
-                
-                Text(viewModel.userEmail) // Email User Dinamis (Opsional ditampilkan)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.top, -35)
-                    .padding(.bottom, 5)
+                    .background(Circle().fill(Color.white))
 
-                Text("My Interest: \(viewModel.userInterests)") // Menggunakan data dinamis
-                    .padding(.top, 0)
-                    .foregroundColor(DarkTeal)
-                // ----------------------------
-                
-                Button("Add More Category") {
-                    // action
-                }
-                .font(.subheadline)
-                .padding(.horizontal, 15)
-                .padding(.vertical, 8)
-                .background(DarkTeal)
-                .foregroundColor(.white)
-                .cornerRadius(20)
-                
-                HStack (spacing: 20){
-                    // --- TOTAL POINTS ---
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white)
-                            .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(DarkTeal, lineWidth: 2))
-                                .frame(width: 120, height: 80)
-                        
-                        VStack{
-                            Text("My Points")
-                                .font(.subheadline)
-                            
-                            // Ambil dari ViewModel
-                            Text("\(viewModel.userPoints)")
-                                .font(.title3)
-                                .foregroundColor(orange)
-                        }
-                    }
-                    
-                    // --- TOTAL SURVEY ---
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white)
-                            .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(DarkTeal, lineWidth: 2))
-                                .frame(width: 120, height: 80)
-                        
-                        VStack{
-                            Text("Total Survey")
-                                .font(.subheadline)
-                            
-                            // Ambil dari ViewModel (Count HResponse)
-                            Text("\(viewModel.completedSurveysCount)")
-                                .font(.title3)
-                                .foregroundColor(orange)
-                        }
-                    }
-                                            
-                }
-                .padding(.top, 15)
-                
-                Divider()
-                    .padding(.horizontal, 30)
-                    .padding(.vertical, 20)
-                
-                VStack{
-                    // Help Button
-                    Button(action: {
-                        navigateToHelp = true
-                    }) {
-                        HStack(spacing: 15) {
-                            Image(systemName: "questionmark.circle")
-                                .resizable()
-                                .frame(width: 22, height: 22)
-                                .foregroundColor(DarkTeal)
-                                    
-                            Text("Help")
-                                .font(.body)
-                                .foregroundColor(DarkTeal)
-                                                
-                            Spacer()
-                                    
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(DarkTeal)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 30)
-                    .padding(.bottom, 20)
-                    
-                    // Setting Button
-                    Button(action: {
-                        navigateToSetting = true
-                    }) {
-                        HStack(spacing: 15) {
-                            Image(systemName: "gearshape")
-                                .resizable()
-                                .frame(width: 22, height: 22)
-                                .foregroundColor(DarkTeal)
-                                    
-                            Text("Setting")
-                                .font(.body)
-                                .foregroundColor(DarkTeal)
-                                                
-                            Spacer()
-                                    
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(DarkTeal)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 30)
-                    .padding(.bottom, 20)
-                    
-                    // Change Account Button
-                    Button(action: {
-                        navigateToDashboard = true
-                    }) {
-                        HStack(spacing: 15) {
-                            Image(systemName: "person.2.circle")
-                                .resizable()
-                                .frame(width: 22, height: 22)
-                                .foregroundColor(DarkTeal)
-                                    
-                            Text("Change Account")
-                                .font(.body)
-                                .foregroundColor(DarkTeal)
-                                                
-                            Spacer()
-                                    
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(DarkTeal)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 30)
-                    
-                    // Hidden NavigationLinks
-//                    NavigationLink(destination: DashboardCreatorView(), isActive: $navigateToHelp) { EmptyView() }
-//                    NavigationLink(destination: DashboardCreatorView(), isActive: $navigateToSetting) { EmptyView() }
-                    NavigationLink(destination: DashboardCreatorView(context: viewContext), isActive: $navigateToDashboard) { EmptyView() }
-                }
-                .padding(.leading, 30)
-                
-                Spacer()
+                // Ikon pensil visual saja
+                Image(systemName: "pencil")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.gray)
+                    .padding(6)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .shadow(radius: 2)
+                    .offset(x: 5, y: 0)
             }
-            Spacer()
+            .offset(y: -50)
+            .padding(.bottom, -40)
+
+            // Nama
+            Text(viewModel.userName)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(darkTeal)
+
+            // Interest
+            Text("My Interest: \(viewModel.userInterests)")
+                .font(.subheadline)
+                .foregroundColor(darkTeal)
+                .padding(.bottom, 10)
+
+            // --- TOMBOL ADD MORE CATEGORY SUDAH DIHAPUS DISINI ---
         }
-        .ignoresSafeArea(.all, edges: .top)
-        .onAppear {
-            // Refresh data setiap kali halaman ini muncul
-            viewModel.fetchUserProfile()
-        }
+        .padding(.bottom, 24)
     }
+
+    // 3. Stats Cards
+    var statsCardsSection: some View {
+        HStack(spacing: 16) {
+            // Card Poin
+            VStack(spacing: 8) {
+                Text("My Points")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(darkTeal)
+                Text("\(viewModel.userPoints)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(brandOrange)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16).stroke(
+                    darkTeal,
+                    lineWidth: 1.5
+                )
+            )
+            .cornerRadius(16)
+
+            // Card Survey
+            VStack(spacing: 8) {
+                Text("Total Survey")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(darkTeal)
+                Text("\(viewModel.completedSurveysCount)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(brandOrange)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16).stroke(
+                    darkTeal,
+                    lineWidth: 1.5
+                )
+            )
+            .cornerRadius(16)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 20)
+    }
+}
+
+// Helper Corner Radius
+extension View {
+    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
+    }
+}
+
+#Preview {
+    let context = PersistenceController.shared.container.viewContext
+    ProfileUserView(context: context)
 }
