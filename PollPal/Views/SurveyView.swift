@@ -11,22 +11,28 @@ struct SurveyView: View {
     @State private var selectedImage: UIImage?
     @State private var mode: String = "create"
 
-    init(context: NSManagedObjectContext, survey: Survey?, mode: String = "create") {
-            self._mode = State(initialValue: mode)
+    init(mode: String, survey: Survey?, context: NSManagedObjectContext) {
+        self.mode = mode
 
-            if mode == "create" {
-                let newSurvey = Survey(context: context)
-                newSurvey.survey_id = UUID()
-                newSurvey.survey_created_at = Date()
-                self.survey = newSurvey
-                _vm = StateObject(wrappedValue: SurveyViewModel(context: context, survey: newSurvey))
-                vm.createSurveyIfNeeded()
-            } else {
-                let existingSurvey = survey!
-                self.survey = existingSurvey
-                _vm = StateObject(wrappedValue: SurveyViewModel(context: context, survey: existingSurvey))
-            }
+        let surveyToUse: Survey
+
+        if mode == "create" {
+            let newSurvey = Survey(context: context)
+            newSurvey.survey_id = UUID()
+            newSurvey.survey_created_at = Date()
+            surveyToUse = newSurvey  // ✔ surveyToUse aman
+        } else {
+            surveyToUse = survey!  // ✔ juga aman
         }
+
+        self.survey = surveyToUse  // ✔ stored property SURVEY terisi
+        _vm = StateObject(
+            wrappedValue: SurveyViewModel(
+                context: context,
+                survey: surveyToUse
+            )
+        )  // ✔ stored property VM terisi
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -215,24 +221,24 @@ struct SurveyView: View {
                         .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                 }
 
-//                Button(action: { showingImagePicker = true }) {
-//                    Text("Add Image")
-//                        .fontWeight(.bold)
-//                        .foregroundColor(.white)
-//                        .frame(maxWidth: .infinity)
-//                        .padding(.vertical, 15)
-//                        .background(Color(hex: "FE982A"))
-//                        .cornerRadius(15)
-//                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-//                }
-//                .sheet(isPresented: $showingImagePicker) {
-//                    ImagePicker(image: $selectedImage)
-//                        .onDisappear {
-//                            if let img = selectedImage {
-//                                vm.saveImage(img)
-//                            }
-//                        }
-//                }
+                //                Button(action: { showingImagePicker = true }) {
+                //                    Text("Add Image")
+                //                        .fontWeight(.bold)
+                //                        .foregroundColor(.white)
+                //                        .frame(maxWidth: .infinity)
+                //                        .padding(.vertical, 15)
+                //                        .background(Color(hex: "FE982A"))
+                //                        .cornerRadius(15)
+                //                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                //                }
+                //                .sheet(isPresented: $showingImagePicker) {
+                //                    ImagePicker(image: $selectedImage)
+                //                        .onDisappear {
+                //                            if let img = selectedImage {
+                //                                vm.saveImage(img)
+                //                            }
+                //                        }
+                //                }
             }
             .padding(.horizontal, 30)
             .padding(.top, 20)

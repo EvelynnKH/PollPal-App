@@ -7,7 +7,7 @@ struct QuestionRenderer: View {
     @Binding var qtype: QuestionType
     @State private var showingImagePicker = false
     @State private var selectedImage: UIImage?
-    @StateObject var vm: SurveyViewModel
+    @ObservedObject var vm: SurveyViewModel
 
     var isPreview: Bool = false  // <–– added safely, tidak ubah var lain
 
