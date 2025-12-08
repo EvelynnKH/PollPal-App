@@ -66,9 +66,33 @@ struct SurveySuccessView: View {
             
             // OK Button (Back to Dashboard)
             Button(action: {
-                // Trik untuk kembali ke root view di NavigationStack
-                // Ini akan menutup semua view yang di-push sebelumnya
-                UIApplication.shared.windows.first?.rootViewController?.dismiss(animated: true)
+                            // FIX: Pengganti 'UIApplication.shared.windows' untuk iOS 15+
+                            // Kita mencari 'WindowScene' yang sedang aktif, lalu mengambil window utamanya.
+                            let keyWindow = UIApplication.shared.connectedScenes
+                                .filter { $0.activationState == .foregroundActive }
+                                .compactMap { $0 as? UIWindowScene }
+                                .first?.windows
+                                .filter { $0.isKeyWindow }.first
+                            
+                            // 1. Coba Dismiss (Jika halaman ini adalah Modal/Sheet)
+                            keyWindow?.rootViewController?.dismiss(animated: true)
+                            
+                            // 2. Coba Pop To Root (Jika halaman ini adalah Navigation Push)
+                            // Kita cari NavigationController di dalam root dan minta mundur ke awal
+                            if let rootVC = keyWindow?.rootViewController {
+                                // Mencari Navigation Controller secara rekursif sederhana
+                                func findNav(vc: UIViewController) -> UINavigationController? {
+                                    if let nav = vc as? UINavigationController { return nav }
+                                    for child in vc.children {
+                                        if let nav = findNav(vc: child) { return nav }
+                                    }
+                                    return nil
+                                }
+                                
+                                if let nav = findNav(vc: rootVC) {
+                                    nav.popToRootViewController(animated: true)
+                                }
+                            }
             }) {
                 Text("OK")
                     .font(.headline.bold())
