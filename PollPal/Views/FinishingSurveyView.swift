@@ -28,6 +28,9 @@ struct FinishingSurveyView: View {
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var selectedImage: Image? = nil
     
+    @State private var expandToTen = false
+
+    
     // MARK: - Helper
     func addCategory() {
         let trimmedText = categoryText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -39,7 +42,6 @@ struct FinishingSurveyView: View {
     
     // MARK: - Body
     var body: some View {
-        ScrollView {
             VStack(spacing: 0) {
                 
                 // Header Section
@@ -64,25 +66,41 @@ struct FinishingSurveyView: View {
                 // Main White Card Content
                 VStack(alignment: .leading, spacing: 20) {
                     
+                    ScrollView {
                     // Description
                     VStack(alignment: .leading, spacing: 5) {
-                        Text((survey.survey_description ?? "").isEmpty ? "Untitled Survey" : (survey.survey_description ?? ""))
+                        Text((survey.survey_title ?? "").isEmpty ? "Untitled Survey" : (survey.survey_title ?? ""))
                             .font(.title)
                             .fontWeight(.semibold)
                             .foregroundColor(.primary)
                             .padding(.bottom, 2)
                         
-                        ForEach(questions, id: \.objectID) { q in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(q.question_text ?? "Untitled Question")
-                                    .fontWeight(.bold)
+                        Text("Preview")
+                            .foregroundColor(.gray)
+                            .font(.subheadline)
+                        let initialLimit = 5
+                        let expandedLimit = 10
 
-                                // Kalau kamu mau tampilkan jawaban user -> nggak ada di entity Question
-                                Text("-")
-                                    .foregroundColor(.gray)
-                                    .font(.subheadline)
+                        let currentLimit = expandToTen ? expandedLimit : initialLimit
+
+                        let limitedQuestions = Array(questions.prefix(currentLimit))
+                        ForEach(Array(limitedQuestions.enumerated()), id: \.element.objectID) { index, q in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(index + 1). \(q.question_text ?? "Untitled Question")")
+                                    .fontWeight(.bold)
                             }
                         }
+                        if !expandToTen && questions.count > initialLimit {
+                                    Button("See more…") {
+                                        withAnimation {
+                                            expandToTen = true
+                                        }
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                    .padding(.top, 4)
+                                }
+
                     }
                     .padding(.horizontal)
                     
@@ -257,6 +275,5 @@ struct FinishingSurveyView: View {
             }
         }
         .edgesIgnoringSafeArea(.top)
-        .scrollDisabled(true)
     }
 }

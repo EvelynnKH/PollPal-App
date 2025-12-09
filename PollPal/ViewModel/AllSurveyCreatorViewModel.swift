@@ -14,6 +14,7 @@ class AllSurveyCreatorViewModel: ObservableObject {
     @Published var surveys: [Survey] = []
     @Published var searchText: String = ""
     @Published var selectedFilter: FilterType = .all
+    @Published var totalResponses: Int = 0
 
     let context: NSManagedObjectContext
     let currentUser: User   // user yang login
@@ -69,6 +70,15 @@ class AllSurveyCreatorViewModel: ObservableObject {
         }
         return list
     }
+    
+    private func fetchTotalResponses(for user: User) {
+        let req: NSFetchRequest<HResponse> = HResponse.fetchRequest()
+        req.predicate = NSPredicate(format: "is_filled_by_user == %@", user)
+
+        let results = (try? context.fetch(req)) ?? []
+        self.totalResponses = results.count
+    }
+
 }
 
 
