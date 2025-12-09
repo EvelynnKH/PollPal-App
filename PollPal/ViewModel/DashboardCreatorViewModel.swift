@@ -45,7 +45,16 @@ class DashboardCreatorViewModel: ObservableObject {
         }
     }
 
+    func responseCount(for survey: Survey) -> Int {
+        let req: NSFetchRequest<HResponse> = HResponse.fetchRequest()
+        req.predicate = NSPredicate(format: "in_survey == %@", survey)
 
+        if let results = try? context.fetch(req) {
+            let uniqueUsers = Set(results.compactMap { $0.is_filled_by_user })
+            return uniqueUsers.count
+        }
+        return 0
+    }
 
 
     func loadData() {
@@ -55,8 +64,8 @@ class DashboardCreatorViewModel: ObservableObject {
 
         fetchActiveSurveys(for: user)
         fetchDraftSurveys(for: user)
-        fetchTotalResponses(for: user)
-        fetchAllSurveys()
+        calculateTotalResponsesForAllSurveys()
+        calculateTotalSurveyCount()
     }
 
     private func fetchUser() {
@@ -125,41 +134,39 @@ class DashboardCreatorViewModel: ObservableObject {
     }
 
     // MARK: - TOTAL RESPONSES
-    private func fetchTotalResponses(for user: User) {
-        let req: NSFetchRequest<HResponse> = HResponse.fetchRequest()
-        req.predicate = NSPredicate(format: "is_filled_by_user == %@", user)
+    func calculateTotalResponsesForAllSurveys() {
+        var total = 0
 
-        let results = (try? context.fetch(req)) ?? []
-        self.totalResponses = results.count
-    }
+        for survey in activeSurveys {
+            // Re-fetch supaya instance match
+            guard let safeSurvey = try? context.existingObject(with: survey.objectID) as? Survey else { continue }
 
-    // MARK: - TOTAL SURVEYS (INI YANG KAMU MAU)
-    private func fetchAllSurveys() {
+            let request: NSFetchRequest<HResponse> = HResponse.fetchRequest()
+            request.predicate = NSPredicate(format: "in_survey == %@", safeSurvey)
 
-        guard let user = self.user else {
-            print("❌ User not found")
-            return
+            if let results = try? context.fetch(request) {
+                let uniqueUsers = Set(results.compactMap { $0.is_filled_by_user })
+                total += uniqueUsers.count
+            }
         }
 
-        let req: NSFetchRequest<Survey> = Survey.fetchRequest()
-
-        // PREDICATE FIXED
-        req.predicate = NSPredicate(
-            format: "(survey_status_del == false OR survey_status_del == nil) AND owned_by_user == %@",
-            user
-        )
-
-        do {
-            let count = try context.count(for: req)
-            self.allSurveys = count
-
-            print("✅ Total surveys milik \(user.user_name ?? ""): \(count)")
-
-        } catch {
-            print("❌ Error counting surveys:", error.localizedDescription)
-            self.allSurveys = 0
-        }
+        self.totalResponses = total
     }
+    
+    func calculateTotalSurveyCount() {
+        var total = 0
+
+        for survey in activeSurveys + draftSurveys {
+            guard let safeSurvey = try? context.existingObject(with: survey.objectID) as? Survey else { continue }
+            total += 1
+        }
+
+        self.allSurveys = total
+    }
+
+
+
+
 
 
     
