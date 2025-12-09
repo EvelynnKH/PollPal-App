@@ -7,10 +7,14 @@
 
 import CoreData
 import SwiftUI
+import Foundation
 
 struct AllSurveyCreatorView: View {
     //    @State private var selectedFilter: FilterType = .all
     //    @State private var search = ""
+    @State private var selectedSurvey: Survey?
+    @State private var showSurveyDetail = false
+
 
     @Environment(\.managedObjectContext) private var context
     @StateObject var vm: AllSurveyCreatorViewModel
@@ -93,7 +97,12 @@ struct AllSurveyCreatorView: View {
                                         $0.category_name
                                     } ?? [],
                                 actionText: "View More..",
-                                isDisabled: false
+                                isDisabled: false,
+                                responseCount: vm.totalResponses,
+                                onViewMore: {
+                                        selectedSurvey = survey
+                                        showSurveyDetail = true
+                                    }
                             )
                         }
                     }
@@ -102,7 +111,12 @@ struct AllSurveyCreatorView: View {
 
                 Spacer()
             }
+        }.navigationDestination(isPresented: $showSurveyDetail) {
+            if let survey = selectedSurvey {
+                SurveyView(mode: "edit", survey: survey, context:  context)
+            }
         }
+
     }
     // Helpers
     func surveyStatus(_ survey: Survey) -> String {
@@ -178,6 +192,8 @@ struct SurveyCardView: View {
     let tags: [String]
     let actionText: String
     let isDisabled: Bool
+    let responseCount: Int
+    let onViewMore: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -213,19 +229,19 @@ struct SurveyCardView: View {
             }
 
             HStack {
-                Text("👁 5000")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                Text("✅ 1293")
+                Text("\(responseCount) Response")
                     .font(.caption)
                     .foregroundColor(.green)
 
                 Spacer()
 
-                Text(actionText)
-                    .font(.headline)
-                    .foregroundColor(isDisabled ? .gray : .orange)
-                    .underline()
+                Button(action: onViewMore) {
+                    Text(actionText)
+                        .font(.headline)
+                        .foregroundColor(isDisabled ? .gray : .orange)
+                        .underline()
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding()
