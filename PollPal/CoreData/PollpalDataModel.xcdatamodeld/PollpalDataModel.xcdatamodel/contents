@@ -52,7 +52,7 @@
         <attribute name="survey_title" optional="YES" attributeType="String"/>
         <attribute name="survey_updated_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="has_category" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Category" inverseName="in_survey" inverseEntity="Category"/>
-        <relationship name="has_hresponse" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="HResponse" inverseName="in_survey" inverseEntity="HResponse"/>
+        <relationship name="has_hresponse" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="HResponse" inverseName="in_survey" inverseEntity="HResponse"/>
         <relationship name="has_question" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Question" inverseName="in_survey" inverseEntity="Question"/>
         <relationship name="has_transaction" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Transaction" inverseName="in_survey" inverseEntity="Transaction"/>
         <relationship name="owned_by_user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="has_survey" inverseEntity="User"/>
