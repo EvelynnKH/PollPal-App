@@ -5,7 +5,7 @@ struct TopUpPoint: View {
     @State private var navigateToSuccess: Bool = false
     @State private var typedAmount: String = ""
     
-    let amounts = [1_000, 2_000, 5_000, 10_000, 15_000, 20_000]
+    let amounts = [250, 500, 750, 1000, 2000, 5000]
     
     @Environment(\.managedObjectContext) private var viewContext
     @FetchRequest private var loggedInUser: FetchedResults<User>
@@ -30,7 +30,7 @@ struct TopUpPoint: View {
             VStack(alignment: .leading, spacing: 20) {
                 
                 // MARK: Title
-                Text("Top Up")
+                Text("Top Up Points")
                     .font(.system(size: 25, weight: .bold))
                     .foregroundColor(.darkTeal)
                     .padding(.top, 120)
@@ -90,7 +90,6 @@ struct TopUpPoint: View {
                     Text("Payment Method")
                         .font(.title3)
                         .foregroundColor(.darkTeal)
-
                         .padding(.bottom, 10)
                     
                     VStack(spacing: 18) {
@@ -115,15 +114,6 @@ struct TopUpPoint: View {
                         
                         Divider()
                         
-                        PaymentRow(
-                            icon: "qris",
-                            title: "QRIS",
-                            method: "QRIS",
-                            phone: "",
-                            selectedMethod: $selectedMethod
-                        )
-                        
-                        Divider()
                         
                     }
                 }
@@ -251,7 +241,6 @@ extension NumberFormatter {
         return formatter
     }
 }
-
 extension Int32 {
     func formattedWithSeparator() -> String {
         let formatter = NumberFormatter()
@@ -259,7 +248,6 @@ extension Int32 {
         return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
     }
 }
-
 #Preview {
     TopUpPoint()
 }

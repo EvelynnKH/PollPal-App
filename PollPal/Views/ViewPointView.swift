@@ -18,31 +18,38 @@ struct ViewPointView: View {
         
         // Currently logged-in User object
         @FetchRequest private var loggedInUser: FetchedResults<User>
-
     init() {
         // 1. Get logged-in user UUID from UserDefaults
         let userIDString = UserDefaults.standard.string(forKey: "logged_in_user_id") ?? ""
         let userUUID = UUID(uuidString: userIDString) ?? UUID() // fallback if missing
-
         // 2. Fetch survey history for current user
         _surveyHistory = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \HResponse.submitted_at, ascending: false)],
             predicate: NSPredicate(format: "is_filled_by_user.user_id == %@", userUUID as CVarArg)
         )
-
         // 3. Fetch transactions for current user
         _transactions = FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \Transaction.transaction_created_at, ascending: false)],
             predicate: NSPredicate(format: "owned_by_user.user_id == %@", userUUID as CVarArg)
         )
-
         // 4. Fetch the current logged-in user
         _loggedInUser = FetchRequest(
             sortDescriptors: [],
             predicate: NSPredicate(format: "user_id == %@", userUUID as CVarArg)
         )
     }
-
+    var filteredTransactions: [Transaction] {
+        if searchText.isEmpty {
+            return Array(transactions)
+        } else {
+            return transactions.filter { t in
+                // Check if the title or description contains the search text (case-insensitive)
+                let title = titleFor(transaction: t).lowercased()
+                let desc = (t.transaction_description ?? "").lowercased()
+                return title.contains(searchText.lowercased()) || desc.contains(searchText.lowercased())
+            }
+        }
+    }
     
     var body: some View {
         NavigationStack{
@@ -109,7 +116,8 @@ struct ViewPointView: View {
                 // MARK: SEARCH BAR
                 HStack {
                     TextField("Search", text: $searchText)
-                        .padding()
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
                         .background(Color.gray.opacity(0.15))
                         .cornerRadius(20)
                     Image(systemName: "magnifyingglass")
@@ -117,13 +125,14 @@ struct ViewPointView: View {
                         .font(.title2)
                 }
                 .padding(.horizontal)
-
                 // MARK: DYNAMIC HISTORY LIST
                 ScrollView(.vertical, showsIndicators: false) {
+                    // Filtered transactions based on search text
+                    
                     VStack(spacing: 0) {
                         
                         // TRANSACTION HISTORY (Topup, reward, cost, withdraw)
-                        ForEach(transactions) { t in
+                        ForEach(filteredTransactions) { t in
                             
                             let points = Int(t.transaction_point_change)
                             let dateString = formatDate(t.transaction_created_at)
@@ -142,10 +151,9 @@ struct ViewPointView: View {
                     }
                     .padding(.horizontal)
                 }
-
                 Spacer()
             }
-            .toolbar(.hidden, for: .tabBar) 
+            .toolbar(.hidden, for: .tabBar)
             .background(Color(.systemGray6))
             .ignoresSafeArea(edges: .bottom)
         }
@@ -174,7 +182,6 @@ struct ViewPointView: View {
             return t.transaction_description ?? "Transaction"
         }
     }
-
     // MARK: - Icon Picker
     func iconFor(type: String) -> String {
         switch type {
@@ -190,7 +197,6 @@ struct ViewPointView: View {
             return "dollarsign.circle.fill"
         }
     }
-
 }
 struct TransactionRow_UI: View {
     var icon: String

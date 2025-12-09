@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="25B78" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="25B78" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="Category" representedClassName="Category" syncable="YES" codeGenerationType="class">
         <attribute name="category_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="category_name" optional="YES" attributeType="String"/>
@@ -79,7 +79,7 @@
         <attribute name="user_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <relationship name="filled_hresponse" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="HResponse" inverseName="is_filled_by_user" inverseEntity="HResponse"/>
         <relationship name="has_survey" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Survey" inverseName="owned_by_user" inverseEntity="Survey"/>
-        <relationship name="has_transaction" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Transaction" inverseName="owned_by_user" inverseEntity="Transaction"/>
+        <relationship name="has_transaction" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="owned_by_user" inverseEntity="Transaction"/>
         <relationship name="like_category" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Category" inverseName="is_liked_by_user" inverseEntity="Category"/>
     </entity>
 </model>
