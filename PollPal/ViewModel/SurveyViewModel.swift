@@ -5,6 +5,7 @@ import PhotosUI
 class SurveyViewModel: ObservableObject {
 
     @Published var questions: [Question] = []
+    @Published var responses: [DResponse] = []
 
     private let context: NSManagedObjectContext
     private var survey: Survey
@@ -13,7 +14,9 @@ class SurveyViewModel: ObservableObject {
         self.context = context
         self.survey = survey
         loadQuestions()
+        fetchResponses()
     }
+    
 
     func loadQuestions() {
         let request = Question.fetchRequest()
@@ -224,6 +227,19 @@ class SurveyViewModel: ObservableObject {
             }
         }
 
+    
+    func fetchResponses() {
+        let req: NSFetchRequest<DResponse> = DResponse.fetchRequest()
+        req.predicate = NSPredicate(format: "in_question.in_survey == %@", survey)
+
+        do {
+            responses = try context.fetch(req)
+        } catch {
+            print("❌ fetchResponses error:", error)
+        }
+    }
+
+
 
 }
 
@@ -288,4 +304,7 @@ struct ImagePicker: UIViewControllerRepresentable {
             parent.presentationMode.wrappedValue.dismiss()
         }
     }
+    
+  
+
 }

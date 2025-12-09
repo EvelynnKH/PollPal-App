@@ -13,30 +13,30 @@ struct SurveyView: View {
     @State private var tempTitle: String = ""
 
     init(mode: String, survey: Survey?, context: NSManagedObjectContext) {
-            self.mode = mode   // <-- SET VALUE
+        self.mode = mode  // <-- SET VALUE
 
-            let surveyToUse: Survey
+        let surveyToUse: Survey
 
-            if mode == "create" {
-                let newSurvey = Survey(context: context)
-                newSurvey.survey_id = UUID()
-                newSurvey.survey_created_at = Date()
-                surveyToUse = newSurvey
-            } else {
-                surveyToUse = survey!   // <-- untuk edit
-            }
+        if mode == "create" {
+            let newSurvey = Survey(context: context)
+            newSurvey.survey_id = UUID()
+            newSurvey.survey_created_at = Date()
+            surveyToUse = newSurvey
+        } else {
+            surveyToUse = survey!  // <-- untuk edit
+        }
 
-            self.survey = surveyToUse
+        self.survey = surveyToUse
 
-            _vm = StateObject(
-                wrappedValue: SurveyViewModel(
-                    context: context,
-                    survey: surveyToUse
-                )
+        _vm = StateObject(
+            wrappedValue: SurveyViewModel(
+                context: context,
+                survey: surveyToUse
             )
+        )
         self._tempTitle = State(initialValue: surveyToUse.survey_title ?? "")
 
-        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -77,6 +77,7 @@ struct SurveyView: View {
                         editorTabContent.padding(.top, 10)
                     } else {
                         Text("cmn bs dibuka klo udh ada yg ngisi")
+                        responsesTabContent
                     }
 
                 }
@@ -118,7 +119,7 @@ struct SurveyView: View {
 
             // TITLE + DESCRIPTION
             VStack(alignment: .leading, spacing: 5) {
-                
+
                 ZStack(alignment: .topLeading) {
                     if (survey.survey_title ?? "").isEmpty {
                         Text("Enter Your Survey Title")
@@ -141,7 +142,6 @@ struct SurveyView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.gray.opacity(0.3))
                 )
-
 
                 ZStack(alignment: .topLeading) {
                     if (survey.survey_description
@@ -190,6 +190,35 @@ struct SurveyView: View {
 
         }
     }
+
+    // MARK: Responses Tab Content
+//    private func responses(for question: Question) -> [DResponse] {
+//        vm.responses.filter { $0.in_question == question }
+//    }
+
+    private var responsesTabContent: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+
+                ForEach(vm.questions) { question in
+
+                    let filtered = vm.responses.filter {
+                        $0.in_question == question
+                    }
+
+                    ResponseRenderer(
+                        question: question,
+                        responses: filtered
+                    )
+                }
+            }
+            .padding(.vertical)
+        }
+        .onAppear {
+            vm.fetchResponses()   // pastikan selalu refresh
+        }
+    }
+
 
     // MARK: Sticky Bottom Bar
     private var bottomStickyBar: some View {
