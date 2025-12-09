@@ -79,7 +79,7 @@
         <attribute name="user_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <relationship name="filled_hresponse" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="HResponse" inverseName="is_filled_by_user" inverseEntity="HResponse"/>
         <relationship name="has_survey" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Survey" inverseName="owned_by_user" inverseEntity="Survey"/>
-        <relationship name="has_transaction" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Transaction" inverseName="owned_by_user" inverseEntity="Transaction"/>
+        <relationship name="has_transaction" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="owned_by_user" inverseEntity="Transaction"/>
         <relationship name="like_category" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Category" inverseName="is_liked_by_user" inverseEntity="Category"/>
     </entity>
 </model>

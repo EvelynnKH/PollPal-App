@@ -106,15 +106,7 @@ struct WithdrawPoint: View {
                             selectedMethod: $selectedMethod
                         )
                         
-                        Divider()
-                        
-                        PaymentRow(
-                            icon: "qris",
-                            title: "QRIS",
-                            method: "QRIS",
-                            phone: "",
-                            selectedMethod: $selectedMethod
-                        )
+  
                         
                         Divider()
                         
@@ -149,7 +141,7 @@ struct WithdrawPoint: View {
                                     // Create transaction record
                                     let trans = Transaction(context: viewContext)
                                     trans.transaction_id = UUID()
-                                    trans.transaction_point_change = Int32(selectedAmount)
+                                    trans.transaction_point_change = -Int32(selectedAmount)
                                     trans.transaction_description = "Withdraw Berhasil"
                                     trans.transaction_status_del = false
                                     trans.owned_by_user = user
@@ -192,7 +184,6 @@ struct WithdrawPoint: View {
         }
     }
 }
-
 extension Int {
     func formattedWithSeparator() -> String {
         let formatter = NumberFormatter()
@@ -200,7 +191,6 @@ extension Int {
         return formatter.string(from: NSNumber(value: self)) ?? "\(self)"
     }
 }
-
 // MARK: Preview
 #Preview {
     WithdrawPoint()
