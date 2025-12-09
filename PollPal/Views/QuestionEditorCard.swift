@@ -43,14 +43,14 @@ struct QuestionEditorCard: View {
     // --------------------------
     private var typePickerSection: some View {
         HStack {
-            Text(qtype.rawValue.capitalized)
+            Text(qtype.title)
                 .font(.system(size: 14, weight: .medium))
 
             Spacer()
 
             Menu {
                 ForEach(QuestionType.allCases, id: \.rawValue) { type in
-                    Button(type.rawValue.capitalized) {
+                    Button(type.title) {
                         qtype = type
 
                         // persist type on question

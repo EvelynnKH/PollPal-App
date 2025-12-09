@@ -52,6 +52,8 @@ class SurveyViewModel: ObservableObject {
         if survey.survey_created_at == nil {
             survey.survey_created_at = Date()
             survey.survey_id = UUID()
+            survey.survey_status_del = false
+            
         }
     }
     
@@ -74,6 +76,7 @@ class SurveyViewModel: ObservableObject {
 
     func publishSurvey() {
         survey.is_public = true
+        survey.survey_status_del = false
         if survey.owned_by_user == nil {
             if let uuidString = UserDefaults.standard.string(forKey: "logged_in_user_id"),
                let uuid = UUID(uuidString: uuidString) {
@@ -227,7 +230,10 @@ class SurveyViewModel: ObservableObject {
             }
         }
 
-    
+    func responsesFor(_ question: Question) -> [DResponse] {
+        responses.filter { $0.in_question == question }
+    }
+
     func fetchResponses() {
         let req: NSFetchRequest<DResponse> = DResponse.fetchRequest()
         req.predicate = NSPredicate(format: "in_question.in_survey == %@", survey)

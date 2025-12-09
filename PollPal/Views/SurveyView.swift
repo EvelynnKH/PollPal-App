@@ -76,7 +76,6 @@ struct SurveyView: View {
                     if selectedTab == 0 {
                         editorTabContent.padding(.top, 10)
                     } else {
-                        Text("cmn bs dibuka klo udh ada yg ngisi")
                         responsesTabContent
                     }
 
@@ -201,16 +200,12 @@ struct SurveyView: View {
             VStack(spacing: 20) {
 
                 ForEach(vm.questions) { question in
-
-                    let filtered = vm.responses.filter {
-                        $0.in_question == question
-                    }
-
-                    ResponseRenderer(
+                    ResponseRendered(
                         question: question,
-                        responses: filtered
+                        responses: vm.responsesFor(question)
                     )
                 }
+
             }
             .padding(.vertical)
         }
