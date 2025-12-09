@@ -11,141 +11,149 @@ import SwiftUI
 struct DashboardCreatorView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var vm: DashboardCreatorViewModel
-    @State private var navigationPath: [String] = []
-    @ObservedObject private var viewModel: DashboardViewModel
+    //    @State private var navigationPath: [String] = []
     @State private var tempSurvey: Survey?
     init(context: NSManagedObjectContext) {
         // StateObject
         _vm = StateObject(
             wrappedValue: DashboardCreatorViewModel(context: context)
         )
-        // default values untuk property lain:
-        _navigationPath = State(initialValue: [])
-        // viewModel HARUS di-init juga
-        self.viewModel = DashboardViewModel(context: context)
     }
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // MARK: - HEADER
-                    Text("Hello, \(viewModel.userName ?? "Creator")")
-                        .font(.system(size: 36, weight: .bold))
-                        .foregroundColor(Color(hex: "1F3A45"))
-                    // MARK: - STATS ROW
-                    HStack(spacing: 5) {
-                        StatCardView(
-                            number: "\(vm.totalResponses)",
-                            label: "Responses"
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // MARK: - HEADER
+                Text("Hello, \(vm.user?.user_name ?? "Creator")")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(Color(hex: "1F3A45"))
+                // MARK: - STATS ROW
+                HStack(spacing: 5) {
+                    StatCardView(
+                        number: "\(vm.totalResponses)",
+                        label: "Responses"
+                    )
+                    NavigationLink(
+                        destination: AllSurveyCreatorView(
+                            context: viewContext,
+                            currentUser: vm.user!
                         )
+                    ) {
                         StatCardView(
                             number: "\(vm.allSurveys)",
                             label: "All Surveys",
                             showMore: true,
-                            onMoreTap: {
-                                navigationPath.append("AllSurveyCreatorView")
-                            }
+                            onMoreTap: nil
                         )
+                    }
+
+                    NavigationLink(
+                        destination: Text("Points Detail Page")
+                    ) {
                         StatCardView(
                             number: "\(vm.points)",
                             label: "Points",
                             showMore: true,
-                            onMoreTap: {
-                                navigationPath.append("pointsPage")
-                            }
+                            onMoreTap: nil
                         )
                     }
-                    // MARK: - ACTION BUTTONS
-                    HStack(spacing: 10) {
-                        NavigationLink(
-                            destination: {
-                                if let s = tempSurvey {
-                                    SurveyView(
-                                        mode: "create",
-                                        survey: s,
-                                        context: viewContext
-                                    )
-                                } else {
-                                    EmptyView()
-                                }
+                }
+                // MARK: - ACTION BUTTONS
+                HStack(spacing: 10) {
+                    NavigationLink(
+                        destination: {
+                            if let s = tempSurvey {
+                                SurveyView(
+                                    mode: "create",
+                                    survey: s,
+                                    context: viewContext
+                                )
+                            } else {
+                                EmptyView()
                             }
-                        ) {
-                            ActionButton(
-                                icon: "plus",
-                                text: "Create New Survey"
-                            )
                         }
-                        .simultaneousGesture(
-                            TapGesture().onEnded {
-                                let s = Survey(context: viewContext)
-                                s.survey_id = UUID()
-                                s.survey_created_at = Date()
-                                s.survey_status_del = false
-                                s.is_public = false
-                                tempSurvey = s
-                            }
+                    ) {
+                        ActionButton(
+                            icon: "plus",
+                            text: "Create New Survey"
                         )
-                        ActionButton(icon: "bell", text: "Notifications (23)")
                     }
-                    // MARK: - ACTIVE SURVEYS
-                    Text("Active Surveys")
-                        .font(.title2.bold())
-                        .foregroundColor(Color(hex: "1F3A45"))
-                    VStack(spacing: 16) {
-                        ForEach(vm.activeSurveys, id: \.self) { survey in
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            let s = Survey(context: viewContext)
+                            s.survey_id = UUID()
+                            s.survey_created_at = Date()
+                            s.survey_status_del = false
+                            s.is_public = false
+                            tempSurvey = s
+                        }
+                    )
+                    ActionButton(icon: "bell", text: "Notifications (23)")
+                }
+                // MARK: - ACTIVE SURVEYS
+                Text("Active Surveys")
+                    .font(.title2.bold())
+                    .foregroundColor(Color(hex: "1F3A45"))
+                VStack(spacing: 16) {
+                    ForEach(vm.activeSurveys, id: \.self) { survey in
+                        NavigationLink(
+                            destination: SurveyView(
+                                mode: "edit",  // atau "view", terserah kamu
+                                survey: survey,
+                                context: viewContext
+                            )
+                        ) {
                             ActiveSurveyCard(
                                 title: survey.survey_title ?? "Untitled",
-                                responses: vm.totalResponses ?? 0
+                                responses: vm.responseCount(for: survey)
                             )
                         }
                     }
-                    .padding()
-                    .background(Color.orange)
-                    .cornerRadius(28)
-                    // MARK: - DRAFTS
-                    Text("Drafts")
-                        .font(.title2.bold())
-                        .foregroundColor(Color(hex: "1F3A45"))
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            ForEach(vm.draftSurveys, id: \.self) { survey in
-                                NavigationLink(
-                                    destination: SurveyView(
-                                        mode: "edit",
-                                        survey: survey,
-                                        context: viewContext
-                                    )
-                                ) {
-                                    DraftCard(
-                                        title: survey.survey_title ?? "Untitled",
-                                        subtitle: "(Draft)"
-                                    )
-                                }
+                }
+                .padding()
+                .background(Color.orange)
+                .cornerRadius(28)
+                // MARK: - DRAFTS
+                Text("Drafts")
+                    .font(.title2.bold())
+                    .foregroundColor(Color(hex: "1F3A45"))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(vm.draftSurveys, id: \.self) { survey in
+                            NavigationLink(
+                                destination: SurveyView(
+                                    mode: "edit",
+                                    survey: survey,
+                                    context: viewContext
+                                )
+                            ) {
+                                DraftCard(
+                                    title: survey.survey_title ?? "Untitled",
+                                    subtitle: "(Draft)"
+                                )
                             }
                         }
                     }
-                    Spacer()
                 }
-                .padding(.horizontal)
+                Spacer()
             }
-            .navigationDestination(for: String.self) { route in
-                switch route {
-                case "AllSurveyCreatorView":
-                    AllSurveyCreatorView(
-                        context: viewContext,
-                        currentUser: vm.user!
-                    )
-                case "pointsPage":
-                    Text("Points Detail Page")  // <-- ganti nanti
-                default:
-                    EmptyView()
-                }
+            .padding(.horizontal)
+        }
+        .navigationDestination(for: String.self) { route in
+            switch route {
+            case "AllSurveyCreatorView":
+                AllSurveyCreatorView(
+                    context: viewContext,
+                    currentUser: vm.user!
+                )
+            case "pointsPage":
+                Text("Points Detail Page")  // <-- ganti nanti
+            default:
+                EmptyView()
             }
-        }.onAppear {
-            vm.debugAllSurveys()
         }
 
     }
+
 }
 // MARK: - COMPONENTS
 //
@@ -170,7 +178,7 @@ struct StatCardView: View {
                 }) {
                     Text("View More..")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color.blue)
+                        .foregroundColor(Color(hex: "1F3A45"))
                         .underline()
                 }
                 .padding(.top, 2)

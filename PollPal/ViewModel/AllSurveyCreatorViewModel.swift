@@ -73,11 +73,14 @@ class AllSurveyCreatorViewModel: ObservableObject {
     
     private func fetchTotalResponses(for user: User) {
         let req: NSFetchRequest<HResponse> = HResponse.fetchRequest()
-        req.predicate = NSPredicate(format: "is_filled_by_user == %@", user)
+        req.predicate = NSPredicate(
+            format: "is_filled_by_user.objectID == %@", user.objectID
+        )
 
         let results = (try? context.fetch(req)) ?? []
         self.totalResponses = results.count
     }
+
 
 }
 
