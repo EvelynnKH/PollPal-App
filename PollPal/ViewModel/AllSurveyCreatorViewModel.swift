@@ -58,7 +58,8 @@ class AllSurveyCreatorViewModel: ObservableObject {
 
         // Status filter
         switch selectedFilter {
-        case .all: break
+        case .all:
+            break
         case .published:
             print("📌 AllSurvey user:", currentUser.user_id!.uuidString)
 
@@ -71,15 +72,22 @@ class AllSurveyCreatorViewModel: ObservableObject {
         return list
     }
     
-    private func fetchTotalResponses(for user: User) {
-        let req: NSFetchRequest<HResponse> = HResponse.fetchRequest()
-        req.predicate = NSPredicate(
-            format: "is_filled_by_user.objectID == %@", user.objectID
-        )
-
-        let results = (try? context.fetch(req)) ?? []
-        self.totalResponses = results.count
-    }
+//    private func fetchTotalResponses(for user: User) {
+//        let req: NSFetchRequest<HResponse> = HResponse.fetchRequest()
+//        req.predicate = NSPredicate(
+//            format: "is_filled_by_user.objectID == %@", user.objectID
+//        )
+//
+//        let results = (try? context.fetch(req)) ?? []
+//        self.totalResponses = results.count
+//    }
+    
+    func getResponseCount(for survey: Survey) -> Int {
+            // Mengambil jumlah data dari relationship 'has_hresponse'
+            // has_hresponse adalah kumpulan (Set) HResponse yang mengisi survei ini
+            let count = survey.has_hresponse?.count ?? 0
+            return count
+        }
 
 
 }

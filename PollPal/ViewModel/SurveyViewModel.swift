@@ -1,6 +1,6 @@
 import CoreData
-import SwiftUI
 import PhotosUI
+import SwiftUI
 
 class SurveyViewModel: ObservableObject {
 
@@ -16,14 +16,12 @@ class SurveyViewModel: ObservableObject {
         loadQuestions()
         fetchResponses()
     }
-    
 
     func loadQuestions() {
         let request = Question.fetchRequest()
 
         // FILTER BERDASARKAN SURVEY
         request.predicate = NSPredicate(format: "in_survey == %@", survey)
-
 
         do {
             questions = try context.fetch(request)
@@ -47,24 +45,30 @@ class SurveyViewModel: ObservableObject {
         saveContext()
         loadQuestions()
     }
-    
+
     func createSurveyIfNeeded() {
         if survey.survey_created_at == nil {
             survey.survey_created_at = Date()
             survey.survey_id = UUID()
             survey.survey_status_del = false
-            
+
         }
     }
-    
+
     func saveSurvey() {
         survey.is_public = false
 
         if survey.owned_by_user == nil {
-            if let uuidString = UserDefaults.standard.string(forKey: "logged_in_user_id"),
-               let uuid = UUID(uuidString: uuidString) {
+            if let uuidString = UserDefaults.standard.string(
+                forKey: "logged_in_user_id"
+            ),
+                let uuid = UUID(uuidString: uuidString)
+            {
                 let req: NSFetchRequest<User> = User.fetchRequest()
-                req.predicate = NSPredicate(format: "user_id == %@", uuid as CVarArg)
+                req.predicate = NSPredicate(
+                    format: "user_id == %@",
+                    uuid as CVarArg
+                )
                 if let u = try? context.fetch(req).first {
                     survey.owned_by_user = u
                 }
@@ -78,10 +82,16 @@ class SurveyViewModel: ObservableObject {
         survey.is_public = true
         survey.survey_status_del = false
         if survey.owned_by_user == nil {
-            if let uuidString = UserDefaults.standard.string(forKey: "logged_in_user_id"),
-               let uuid = UUID(uuidString: uuidString) {
+            if let uuidString = UserDefaults.standard.string(
+                forKey: "logged_in_user_id"
+            ),
+                let uuid = UUID(uuidString: uuidString)
+            {
                 let req: NSFetchRequest<User> = User.fetchRequest()
-                req.predicate = NSPredicate(format: "user_id == %@", uuid as CVarArg)
+                req.predicate = NSPredicate(
+                    format: "user_id == %@",
+                    uuid as CVarArg
+                )
                 if let u = try? context.fetch(req).first {
                     survey.owned_by_user = u
                 }
@@ -99,7 +109,7 @@ class SurveyViewModel: ObservableObject {
             print("❌ Failed to save context:", error)
         }
     }
-    
+
     func saveCategories(_ categories: [String], for survey: Survey) {
         for name in categories {
             // Cek kalau category sudah ada
@@ -111,7 +121,7 @@ class SurveyViewModel: ObservableObject {
             let cat: Category
 
             if let existing = existing {
-                cat = existing   // sudah ada → pakai ini aja
+                cat = existing  // sudah ada → pakai ini aja
             } else {
                 // belum ada → create baru
                 cat = Category(context: context)
@@ -125,7 +135,6 @@ class SurveyViewModel: ObservableObject {
 
         saveContext()
     }
-
 
     private func printSurveyAttributes() {
         print("------------ SURVEY DATA ------------")
@@ -150,53 +159,59 @@ class SurveyViewModel: ObservableObject {
         print("------------------------------------")
     }
 
-   
     @Published var activeSurveys: [Survey] = []
-        
+
     private func fetchActiveSurveys() -> [Survey] {
-          let req: NSFetchRequest<Survey> = Survey.fetchRequest()
-          
-          // ambil semua yg tidak deleted
-          req.predicate = NSPredicate(format: "survey_status_del == NO")
-          req.sortDescriptors = [
-              NSSortDescriptor(keyPath: \Survey.survey_created_at, ascending: false)
-          ]
-          
-          do {
-              let result = try context.fetch(req)
-              self.activeSurveys = result
-              
-              print("📌 Active surveys count: \(result.count)")
-              for s in result {
-                  print(" → \(s.survey_title ?? "(no title)") | id=\(s.survey_id?.uuidString ?? "-")")
-              }
-              
-              return result
-          } catch {
-              print("❌ fetchActiveSurveys error:", error)
-              return []
-          }
-      }
-      
-
-
-    
-    func refreshSurvey() {
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
-        req.predicate = NSPredicate(format: "survey_id == %@", survey.survey_id! as CVarArg)
 
-        if let updated = try? context.fetch(req).first {
-            self.survey = updated   // ⬅️ replace old object!
+        // ambil semua yg tidak deleted
+        req.predicate = NSPredicate(format: "survey_status_del == NO")
+        req.sortDescriptors = [
+            NSSortDescriptor(
+                keyPath: \Survey.survey_created_at,
+                ascending: false
+            )
+        ]
+
+        do {
+            let result = try context.fetch(req)
+            self.activeSurveys = result
+
+            print("📌 Active surveys count: \(result.count)")
+            for s in result {
+                print(
+                    " → \(s.survey_title ?? "(no title)") | id=\(s.survey_id?.uuidString ?? "-")"
+                )
+            }
+
+            return result
+        } catch {
+            print("❌ fetchActiveSurveys error:", error)
+            return []
         }
     }
 
+    func refreshSurvey() {
+        let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+        req.predicate = NSPredicate(
+            format: "survey_id == %@",
+            survey.survey_id! as CVarArg
+        )
+
+        if let updated = try? context.fetch(req).first {
+            self.survey = updated  // ⬅️ replace old object!
+        }
+    }
 
     func saveImage(_ image: UIImage) {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return }
 
         let filename = UUID().uuidString + ".jpg"
-        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent(filename)
+        let url = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0]
+        .appendingPathComponent(filename)
 
         do {
             let q = Question(context: context)
@@ -210,13 +225,18 @@ class SurveyViewModel: ObservableObject {
             print("Error saving image:", error)
         }
     }
-    
+
     func saveImageReturnURL(_ image: UIImage) -> String? {
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            return nil
+        }
 
         let filename = UUID().uuidString + ".jpg"
-        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent(filename)
+        let url = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0]
+        .appendingPathComponent(filename)
 
         do {
             try data.write(to: url)
@@ -226,7 +246,7 @@ class SurveyViewModel: ObservableObject {
             return nil
         }
     }
-    
+
     func getResponseFor(_ question: Question) -> DResponse {
         let r = DResponse(context: context)
         r.dresponse_answer_text = ""
@@ -235,27 +255,27 @@ class SurveyViewModel: ObservableObject {
     }
 
     func reset() {
-            // drop in-memory cache
-            DispatchQueue.main.async {
-                self.questions.removeAll()
-            }
-
-            // rollback any unsaved changes in the context so UI shows clean state
-            if context.hasChanges {
-                context.rollback()
-            }
+        // drop in-memory cache
+        DispatchQueue.main.async {
+            self.questions.removeAll()
         }
 
-        /// (Optional) If you want to delete the current survey from Core Data entirely:
-        func deleteCurrentSurvey() {
-            context.delete(survey)
-            do {
-                try context.save()
-            } catch {
-                print("Failed to delete survey: \(error)")
-                context.rollback()
-            }
+        // rollback any unsaved changes in the context so UI shows clean state
+        if context.hasChanges {
+            context.rollback()
         }
+    }
+
+    /// (Optional) If you want to delete the current survey from Core Data entirely:
+    func deleteCurrentSurvey() {
+        context.delete(survey)
+        do {
+            try context.save()
+        } catch {
+            print("Failed to delete survey: \(error)")
+            context.rollback()
+        }
+    }
 
     func responsesFor(_ question: Question) -> [DResponse] {
         responses.filter { $0.in_question == question }
@@ -263,7 +283,10 @@ class SurveyViewModel: ObservableObject {
 
     func fetchResponses() {
         let req: NSFetchRequest<DResponse> = DResponse.fetchRequest()
-        req.predicate = NSPredicate(format: "in_question.in_survey == %@", survey)
+        req.predicate = NSPredicate(
+            format: "in_question.in_survey == %@",
+            survey
+        )
 
         do {
             responses = try context.fetch(req)
@@ -272,10 +295,15 @@ class SurveyViewModel: ObservableObject {
         }
     }
 
-
+    // In SurveyViewModel.swift
+    func closeSurvey() {
+        survey.is_public = false
+        survey.survey_status_del = true // <--- TANDAI SEBAGAI FINISHED
+        saveContext()
+        objectWillChange.send()
+    }
 
 }
-
 
 struct ImagePickerForQuestion: View {
     @Binding var selectedImage: UIImage?
@@ -292,8 +320,11 @@ struct ImagePickerForQuestion: View {
         .onChange(of: item) { newItem in
             guard let newItem else { return }
             Task {
-                if let data = try? await newItem.loadTransferable(type: Data.self),
-                   let uiImg = UIImage(data: data) {
+                if let data = try? await newItem.loadTransferable(
+                    type: Data.self
+                ),
+                    let uiImg = UIImage(data: data)
+                {
                     await MainActor.run {
                         selectedImage = uiImg
                     }
@@ -314,21 +345,29 @@ struct ImagePicker: UIViewControllerRepresentable {
         return picker
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    func updateUIViewController(
+        _ uiViewController: UIImagePickerController,
+        context: Context
+    ) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+    class Coordinator: NSObject, UINavigationControllerDelegate,
+        UIImagePickerControllerDelegate
+    {
         let parent: ImagePicker
 
         init(_ parent: ImagePicker) {
             self.parent = parent
         }
 
-        func imagePickerController(_ picker: UIImagePickerController,
-                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        func imagePickerController(
+            _ picker: UIImagePickerController,
+            didFinishPickingMediaWithInfo info: [UIImagePickerController
+                .InfoKey: Any]
+        ) {
 
             if let uiImage = info[.originalImage] as? UIImage {
                 parent.image = uiImage
@@ -337,7 +376,5 @@ struct ImagePicker: UIViewControllerRepresentable {
             parent.presentationMode.wrappedValue.dismiss()
         }
     }
-    
-  
 
 }

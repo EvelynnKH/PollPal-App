@@ -8,13 +8,13 @@
 import CoreData
 import Foundation
 
-
 class DashboardCreatorViewModel: ObservableObject {
 
     @Published var user: User?
     @Published var points: Int = 0
     @Published var activeSurveys: [Survey] = []
     @Published var draftSurveys: [Survey] = []
+    @Published var finishedSurveys: [Survey] = []
     @Published var totalResponses: Int = 0
     @Published var allSurveys: Int = 0
     private var context: NSManagedObjectContext
@@ -23,8 +23,7 @@ class DashboardCreatorViewModel: ObservableObject {
         self.context = context
         loadData()
     }
-    
-    
+
     func debugAllSurveys() {
         guard let user = self.user else { return }
 
@@ -56,7 +55,6 @@ class DashboardCreatorViewModel: ObservableObject {
         return 0
     }
 
-
     func loadData() {
         fetchUser()
 
@@ -66,6 +64,7 @@ class DashboardCreatorViewModel: ObservableObject {
         fetchDraftSurveys(for: user)
         calculateTotalResponsesForAllSurveys()
         calculateTotalSurveyCount()
+        fetchFinishedSurveys(for: user)  // Fungsi baru
     }
 
     private func fetchUser() {
@@ -87,9 +86,8 @@ class DashboardCreatorViewModel: ObservableObject {
             if let user = try context.fetch(req).first {
                 self.user = user
                 self.points = Int(user.user_point)
-                
-                print("📌 Dashboard user:", user.user_id!.uuidString)
 
+                print("📌 Dashboard user:", user.user_id!.uuidString)
 
                 print("✅ Logged in user:", user.user_name ?? "")
                 print("✅ User ID:", uuid)
@@ -104,7 +102,7 @@ class DashboardCreatorViewModel: ObservableObject {
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
 
         req.predicate = NSPredicate(
-            format: "is_public == true AND owned_by_user == %@",
+            format: "is_public == YES AND survey_status_del == NO AND owned_by_user == %@",
             user
         )
 
@@ -121,16 +119,28 @@ class DashboardCreatorViewModel: ObservableObject {
         self.activeSurveys = result ?? []
     }
 
-
     // MARK: - DRAFT SURVEYS
     private func fetchDraftSurveys(for user: User) {
         let req: NSFetchRequest<Survey> = Survey.fetchRequest()
         req.predicate = NSPredicate(
-            format: "is_public == NO AND owned_by_user == %@",
+            format:
+                "is_public == NO AND owned_by_user == %@",
             user
         )
 
         self.draftSurveys = (try? context.fetch(req)) ?? []
+    }
+
+    private func fetchFinishedSurveys(for user: User) {
+        let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+
+        req.predicate = NSPredicate(
+            format:
+                "survey_status_del == YES AND owned_by_user == %@",
+            user
+        )
+
+        self.finishedSurveys = (try? context.fetch(req)) ?? []
     }
 
     // MARK: - TOTAL RESPONSES
@@ -139,37 +149,32 @@ class DashboardCreatorViewModel: ObservableObject {
 
         for survey in activeSurveys {
             // Re-fetch supaya instance match
-            guard let safeSurvey = try? context.existingObject(with: survey.objectID) as? Survey else { continue }
+            guard
+                let safeSurvey = try? context.existingObject(
+                    with: survey.objectID
+                ) as? Survey
+            else { continue }
 
             let request: NSFetchRequest<HResponse> = HResponse.fetchRequest()
-            request.predicate = NSPredicate(format: "in_survey == %@", safeSurvey)
+            request.predicate = NSPredicate(
+                format: "in_survey == %@",
+                safeSurvey
+            )
 
             if let results = try? context.fetch(request) {
-                let uniqueUsers = Set(results.compactMap { $0.is_filled_by_user })
+                let uniqueUsers = Set(
+                    results.compactMap { $0.is_filled_by_user }
+                )
                 total += uniqueUsers.count
             }
         }
 
         self.totalResponses = total
     }
-    
+
     func calculateTotalSurveyCount() {
-        var total = 0
-
-        for survey in activeSurveys + draftSurveys {
-            guard let safeSurvey = try? context.existingObject(with: survey.objectID) as? Survey else { continue }
-            total += 1
-        }
-
+        let total = activeSurveys.count + draftSurveys.count + finishedSurveys.count
         self.allSurveys = total
     }
 
-
-
-
-
-
-    
-    
 }
-

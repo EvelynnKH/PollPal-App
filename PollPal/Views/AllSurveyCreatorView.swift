@@ -6,15 +6,14 @@
 //
 
 import CoreData
-import SwiftUI
 import Foundation
+import SwiftUI
 
 struct AllSurveyCreatorView: View {
     //    @State private var selectedFilter: FilterType = .all
     //    @State private var search = ""
     @State private var selectedSurvey: Survey?
     @State private var showSurveyDetail = false
-
 
     @Environment(\.managedObjectContext) private var context
     @StateObject var vm: AllSurveyCreatorViewModel
@@ -80,14 +79,6 @@ struct AllSurveyCreatorView: View {
                     VStack(spacing: 20) {
                         ForEach(vm.filteredSurveys, id: \.self) { survey in
                             SurveyCardView(
-                                //                                status: surveyStatus(survey),
-                                //                                title: survey.survey_title ?? "Untitled",
-                                //                                description: survey.survey_description ?? "-",
-                                //                                date: formatDate(survey.survey_created_at),
-                                //                                tags: survey.categories.map { $0.category_name ?? "" },
-                                //                                actionText: "View More..",
-                                //                                isDisabled: false
-
                                 status: surveyStatus(survey),
                                 title: survey.survey_title ?? "Untitled",
                                 description: survey.survey_description ?? "-",
@@ -98,11 +89,11 @@ struct AllSurveyCreatorView: View {
                                     } ?? [],
                                 actionText: "View More..",
                                 isDisabled: false,
-                                responseCount: vm.totalResponses,
+                                responseCount: vm.getResponseCount(for: survey),
                                 onViewMore: {
-                                        selectedSurvey = survey
-                                        showSurveyDetail = true
-                                    }
+                                    selectedSurvey = survey
+                                    showSurveyDetail = true
+                                }
                             )
                         }
                     }
@@ -113,7 +104,7 @@ struct AllSurveyCreatorView: View {
             }
         }.navigationDestination(isPresented: $showSurveyDetail) {
             if let survey = selectedSurvey {
-                SurveyView(mode: "edit", survey: survey, context:  context)
+                SurveyView(mode: "edit", survey: survey, context: context)
             }
         }
 
@@ -134,7 +125,6 @@ struct AllSurveyCreatorView: View {
         // 3. DRAFT (not deleted + not published)
         return "Draft"
     }
-
 
     //      func surveyTags(_ survey: Survey) -> [String] {
     //          if let categories = survey.has_category as? Set<Category> {

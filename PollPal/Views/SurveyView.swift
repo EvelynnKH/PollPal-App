@@ -12,6 +12,9 @@ struct SurveyView: View {
     let mode: String
     @State private var tempTitle: String = ""
 
+    // State untuk Alert Konfirmasi Finish
+    @State private var showFinishAlert = false
+
     init(mode: String, survey: Survey?, context: NSManagedObjectContext) {
         self.mode = mode  // <-- SET VALUE
 
@@ -63,7 +66,7 @@ struct SurveyView: View {
                             // Hitung total responses dari semua pertanyaan (atau logic lain sesuai kebutuhan)
                             // Disini saya ambil contoh menghitung total HResponse yang terkait survei ini
                             let totalResp = survey.has_hresponse?.count ?? 0
-                            Text("Total Responses: \(totalResp)")
+                            Text("Total: \(totalResp) Responses")
                                 .font(.caption)
                                 .foregroundColor(.white)
                         }
@@ -95,10 +98,19 @@ struct SurveyView: View {
             }
             .padding(.bottom, 100)
 
-            // --- HANYA TAMPILKAN BOTTOM BAR JIKA DI TAB QUESTIONS ---
-            if selectedTab == 0 {
-                bottomStickyBar
+            // MARK: BOTTOM BAR (Dynamic)
+            bottomStickyBar
+        }
+        // Alert Konfirmasi Finish
+        .alert("Finish Survey?", isPresented: $showFinishAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Finish", role: .destructive) {
+                vm.closeSurvey()  // Pastikan fungsi ini ada di ViewModel Anda
             }
+        } message: {
+            Text(
+                "This will close the survey. Respondents will no longer be able to submit answers."
+            )
 
         }
     }
@@ -138,7 +150,7 @@ struct SurveyView: View {
                         Text("Enter Your Survey Title")
                             .foregroundColor(.gray)
                             .padding(.horizontal, 8)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, 20)
                     }
 
                     TextEditor(text: $tempTitle)
@@ -231,69 +243,95 @@ struct SurveyView: View {
     // MARK: Sticky Bottom Bar
     private var bottomStickyBar: some View {
         VStack(spacing: 0) {
-
-            HStack {
-                Spacer()
-                NavigationLink(
-                    destination: FinishingSurveyView(
-                        vm: vm,
-                        survey: survey,
-                        questions: vm.questions
-                    )
-                ) {
-                    Text("Next")
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 20)
-                        .background(Color(hex: "003F57"))
-                        .cornerRadius(10)
-                }
-                .padding(.trailing, 30)
-                .padding(.bottom, 20)
-            }
-
-            HStack {
-
-                Button(action: {
-                    vm.addQuestion(type: .shortAnswer)
-                }) {
-                    Text("Add Question")
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 15)
-                        .background(Color(hex: "FE982A"))
-                        .cornerRadius(15)
-                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+            if selectedTab == 0 {
+                HStack {
+                    Spacer()
+                    NavigationLink(
+                        destination: FinishingSurveyView(
+                            vm: vm,
+                            survey: survey,
+                            questions: vm.questions
+                        )
+                    ) {
+                        Text("Next")
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 20)
+                            .background(Color(hex: "003F57"))
+                            .cornerRadius(10)
+                    }
+                    .padding(.trailing, 30)
+                    .padding(.bottom, 20)
                 }
 
-                //                Button(action: { showingImagePicker = true }) {
-                //                    Text("Add Image")
-                //                        .fontWeight(.bold)
-                //                        .foregroundColor(.white)
-                //                        .frame(maxWidth: .infinity)
-                //                        .padding(.vertical, 15)
-                //                        .background(Color(hex: "FE982A"))
-                //                        .cornerRadius(15)
-                //                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-                //                }
-                //                .sheet(isPresented: $showingImagePicker) {
-                //                    ImagePicker(image: $selectedImage)
-                //                        .onDisappear {
-                //                            if let img = selectedImage {
-                //                                vm.saveImage(img)
-                //                            }
-                //                        }
-                //                }
+                HStack {
+
+                    Button(action: {
+                        vm.addQuestion(type: .shortAnswer)
+                    }) {
+                        Text("Add Question")
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(Color(hex: "FE982A"))
+                            .cornerRadius(15)
+                            .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                    }
+
+                }
+                .padding(.horizontal, 30)
+                .padding(.top, 20)
+                //                .padding(.bottom, 30)
+                //                .background(Color.white)
+                //                .shadow(radius: 10)
+
+            } else {
+                HStack {
+                    // Cek apakah survei masih publik (aktif)
+                    if survey.is_public {
+                        let responseCount = survey.has_hresponse?.count ?? 0
+                        let canFinish = responseCount > 0
+
+                        Button(action: {
+                            showFinishAlert = true
+                        }) {
+                            Text("Finish Survey")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 15)
+                                .background(Color.red)  // Warna Merah untuk stop
+                                .cornerRadius(15)
+                                .shadow(
+                                    color: .black.opacity(0.1),
+                                    radius: 5,
+                                    y: 2
+                                )
+                        }
+                        .disabled(!canFinish)  // Matikan tombol jika 0 response
+
+
+                    } else {
+                        // Jika sudah finish/close (opsional)
+                        Text("Survey Closed")
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(Color.gray)
+                            .cornerRadius(15)
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.top, 20)
             }
-            .padding(.horizontal, 30)
-            .padding(.top, 20)
-            .padding(.bottom, 30)
-            .background(Color.white)
-            .shadow(radius: 10)
 
         }
+        .padding(.bottom, 30)
+        .background(Color.white)
+        .shadow(radius: 10)
         .edgesIgnoringSafeArea(.bottom)
     }
 }
