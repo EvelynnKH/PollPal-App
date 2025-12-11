@@ -23,7 +23,7 @@ struct SurveyDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Header Image (Placeholder)
-            Image("mountain") // Ganti dengan gambar header default app Anda
+            Image("mountain")
                 .resizable()
                 .scaledToFill()
                 .frame(height: 200)
@@ -44,39 +44,60 @@ struct SurveyDetailView: View {
                     .font(.title.bold())
                     .foregroundColor(darkTeal)
                 
+                // Categories
                 if !viewModel.categoryNames.isEmpty {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 8) {
-                                            ForEach(viewModel.categoryNames, id: \.self) { category in
-                                                Text(category)
-                                                    .font(.caption.weight(.medium))
-                                                    .foregroundColor(darkTeal)
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 6)
-                                                    .background(darkTeal.opacity(0.1)) // Background transparan
-                                                    .cornerRadius(8)
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 8)
-                                                            .stroke(darkTeal.opacity(0.2), lineWidth: 1)
-                                                    )
-                                            }
-                                        }
-                                    }
-                                }
-                
-                // Metadata Row (Duration & Count)
-                HStack(spacing: 20) {
-                    HStack {
-                        Image(systemName: "clock")
-                        Text(viewModel.durationString)
-                    }
-                    HStack {
-                        Image(systemName: "list.bullet.clipboard")
-                        Text("\(viewModel.questionCount) Questions")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(viewModel.categoryNames, id: \.self) { category in
+                                Text(category)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundColor(darkTeal)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(darkTeal.opacity(0.1))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(darkTeal.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                        }
                     }
                 }
-                .font(.footnote)
-                .foregroundColor(.gray)
+                
+                // MARK: - Metadata Row (Deadline, Duration, Count)
+                // PERUBAHAN DISINI: Saya ubah jadi ScrollView horizontal agar muat di HP kecil
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        
+                        // 1. DEADLINE (Baru)
+                        if viewModel.hasDeadline {
+                            HStack(spacing: 4) {
+                                Text("Until: \(viewModel.deadlineString)")
+                                    .foregroundColor(viewModel.isExpired ? .red : .gray)
+                            }
+                            // Divider kecil pemisah
+                            Text("|").foregroundColor(Color.gray.opacity(0.3))
+                        }
+                        
+                        // 2. DURATION
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock")
+                            Text(viewModel.durationString)
+                        }
+                        .foregroundColor(.gray)
+                        
+                        Text("|").foregroundColor(Color.gray.opacity(0.3))
+
+                        // 3. QUESTION COUNT
+                        HStack(spacing: 4) {
+                            Image(systemName: "list.bullet.clipboard")
+                            Text("\(viewModel.questionCount) Questions")
+                        }
+                        .foregroundColor(.gray)
+                    }
+                    .font(.footnote)
+                }
                 
                 Divider()
                 
@@ -103,14 +124,14 @@ struct SurveyDetailView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(darkTeal)
+                    .background(viewModel.isExpired ? Color.gray : darkTeal) // Disable warna jika expired
                     .cornerRadius(16)
             }
+            .disabled(viewModel.isExpired) // Disable klik jika expired
             .padding(.horizontal, 24)
             .padding(.bottom, 30)
         }
         .ignoresSafeArea(edges: .top)
-        // Navigasi ke halaman pertanyaan
         .navigationDestination(isPresented: $navigateToQuestions) {
             SurveyQuestionView(context: viewContext, survey: viewModel.survey)
         }

@@ -9,11 +9,9 @@ import SwiftUI
 import CoreData
 
 struct HistoryView: View {
-    // Inject Context & ViewModel
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel: HistoryViewModel
     
-    // Custom Init
     init(context: NSManagedObjectContext) {
         _viewModel = StateObject(wrappedValue: HistoryViewModel(context: context))
     }
@@ -21,19 +19,14 @@ struct HistoryView: View {
     var body: some View {
         VStack(spacing: 0) {
             
-            // LOGIKA UTAMA: Cek apakah data kosong?
             if viewModel.historyItems.isEmpty {
-                
-                // --- TAMPILAN FULL SCREEN EMPTY STATE ---
+                // --- EMPTY STATE (TIDAK BERUBAH) ---
                 VStack(spacing: 20) {
                     Spacer()
-                    
-                    // 1. Ilustrasi Ikon
                     ZStack {
                         Circle()
                             .fill(Color(hex: "0C4254").opacity(0.1))
                             .frame(width: 150, height: 150)
-                        
                         Image(systemName: "list.clipboard")
                             .resizable()
                             .scaledToFit()
@@ -42,7 +35,6 @@ struct HistoryView: View {
                     }
                     .padding(.bottom, 10)
                     
-                    // 2. Teks Informatif
                     Text("No History Yet")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -56,13 +48,11 @@ struct HistoryView: View {
                     
                     Spacer()
                 }
-                // KUNCI PERUBAHAN DISINI:
-                .frame(maxWidth: .infinity, maxHeight: .infinity) // Paksa memenuhi layar
-                .background(Color(hex: "#EFEFEF")) // Warna background diaplikasikan disini
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(hex: "#EFEFEF"))
                 
             } else {
-                
-                // --- TAMPILAN LIST (JIKA ADA DATA) ---
+                // --- LIST ---
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach(viewModel.historyItems) { item in
@@ -71,78 +61,107 @@ struct HistoryView: View {
                     }
                     .padding()
                 }
-                .background(Color(hex: "#EFEFEF")) // Background untuk list juga sama
+                .background(Color(hex: "#EFEFEF"))
             }
         }
-        .background(Color(hex: "#EFEFEF")) // Safety net: Background container utama
+        .background(Color(hex: "#EFEFEF"))
         .onAppear {
             viewModel.fetchHistory()
         }
     }
 }
 
-// ... (Struct SurveyCard tetap sama) ...
-
-// Komponen Card dipisah agar rapi
+// MARK: - UPDATED SURVEY CARD
 struct SurveyCard: View {
     let item: HistoryItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) { // Spacing sedikit diperbesar
 
-            // User owner
+            // MARK: HEADER (Owner & Points)
             HStack {
-                Image(systemName: "person.crop.circle")
-                    .foregroundColor(.orange)
-                Text(item.owner)
-                    .foregroundColor(.orange)
-                    .fontWeight(.semibold)
-            }
-
-            // Survey Title
-            Text(item.title)
-                .font(.body)
-                .foregroundColor(Color(hex: "#0C4254"))
-                .fixedSize(horizontal: false, vertical: true)
-                .fontWeight(.bold)
-                .padding(.vertical)
-
-            // Status section
-            HStack {
-                // Category Loop
-                ForEach(item.categories, id: \.self) { cat in
-                    Text(cat)
+                // Owner Info
+                HStack(spacing: 6) {
+                    Image(systemName: "person.crop.circle")
+                        .foregroundColor(.gray)
+                    Text(item.owner)
                         .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: "#B5C7D1"))
-                        .foregroundColor(.black)
-                        .cornerRadius(10)
+                        .foregroundColor(.gray)
+                        .fontWeight(.medium)
                 }
 
                 Spacer()
 
-                // Status Logic
-                if item.status == .inProgress {
-                    Text("Continue..")
-                        .foregroundColor(.orange)
-                        .font(.footnote)
-                        .fontWeight(.semibold)
-                        .underline()
-                } else {
-                    Text("Finished")
-                        .foregroundColor(.gray)
-                        .font(.footnote)
-                        .fontWeight(.semibold)
-                        .underline()
+                // BARU: Reward Points Badge
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .font(.caption2)
+                    Text("+\(item.points) pts")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                }
+                .foregroundColor(Color(hex: "FE982A")) // Warna Orange Brand
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(hex: "FE982A").opacity(0.1))
+                .cornerRadius(8)
+            }
+
+            // MARK: TITLE
+            Text(item.title)
+                .font(.body) // Sedikit lebih besar
+                .foregroundColor(Color(hex: "#0C4254"))
+                .fixedSize(horizontal: false, vertical: true)
+                .fontWeight(.bold)
+                .lineLimit(2)
+
+            // MARK: FOOTER (Category, Date, Status)
+            HStack(alignment: .bottom) {
+                // Category Loop (Maksimal 2 biar ga penuh, sisanya +N)
+                HStack {
+                    ForEach(item.categories.prefix(2), id: \.self) { cat in
+                        Text(cat)
+                            .font(.caption2)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color(hex: "#B5C7D1").opacity(0.5))
+                            .foregroundColor(Color(hex: "0C4254"))
+                            .cornerRadius(6)
+                    }
+                    if item.categories.count > 2 {
+                        Text("+\(item.categories.count - 2)")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
+                }
+
+                Spacer()
+
+                // BARU: Status & Tanggal
+                VStack(alignment: .trailing, spacing: 4) {
+                    if item.status == .finished {
+                        // Tampilkan Tanggal
+                        Text(item.formattedDate)
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                        
+                        Text("Finished")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                    } else {
+                        Text("Continue..")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color(hex: "FE982A"))
+                            .underline()
+                    }
                 }
             }
-            .padding(.top, 4)
-
         }
-        .padding()
+        .padding(16)
         .background(Color.white)
-        .cornerRadius(14)
-        .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
+        .cornerRadius(16) // Lebih rounded
+        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3) // Shadow lebih soft
     }
 }
