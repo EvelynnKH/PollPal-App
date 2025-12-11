@@ -13,6 +13,10 @@ struct DashboardCreatorView: View {
     @StateObject private var vm: DashboardCreatorViewModel
     //    @State private var navigationPath: [String] = []
     @State private var tempSurvey: Survey?
+    
+    @State private var shouldNavigateToAllSurveys = false
+    @State private var shouldNavigateToPoints = false
+    
     init(context: NSManagedObjectContext) {
         // StateObject
         _vm = StateObject(
@@ -28,34 +32,33 @@ struct DashboardCreatorView: View {
                     .foregroundColor(Color(hex: "1F3A45"))
                 // MARK: - STATS ROW
                 HStack(spacing: 5) {
+                    // 1. Responses Card (Unchanged)
                     StatCardView(
                         number: "\(vm.totalResponses)",
                         label: "Responses"
                     )
-                    NavigationLink(
-                        destination: AllSurveyCreatorView(
-                            context: viewContext,
-                            currentUser: vm.user!
-                        )
-                    ) {
-                        StatCardView(
-                            number: "\(vm.allSurveys)",
-                            label: "All Surveys",
-                            showMore: true,
-                            onMoreTap: nil
-                        )
-                    }
 
-                    NavigationLink(
-                        destination: Text("Points Detail Page")
-                    ) {
-                        StatCardView(
-                            number: "\(vm.points)",
-                            label: "Points",
-                            showMore: true,
-                            onMoreTap: nil
-                        )
-                    }
+                    // 2. All Surveys - REMOVED NavigationLink, using onMoreTap closure
+                    StatCardView(
+                        number: "\(vm.allSurveys)",
+                        label: "All Surveys",
+                        showMore: true,
+                        onMoreTap: {
+                            // This now triggers the .navigationDestination(isPresented: $shouldNavigateToAllSurveys)
+                            self.shouldNavigateToAllSurveys = true
+                        }
+                    )
+
+                    // 3. Points - REMOVED NavigationLink, using onMoreTap closure
+                    StatCardView(
+                        number: "\(vm.points)",
+                        label: "Points",
+                        showMore: true,
+                        onMoreTap: {
+                            // This now triggers the .navigationDestination(isPresented: $shouldNavigateToPoints)
+                            self.shouldNavigateToPoints = true
+                        }
+                    )
                 }
                 // MARK: - ACTION BUTTONS
                 HStack(spacing: 10) {
@@ -138,19 +141,17 @@ struct DashboardCreatorView: View {
             }
             .padding(.horizontal)
         }
-        .navigationDestination(for: String.self) { route in
-            switch route {
-            case "AllSurveyCreatorView":
+        .navigationDestination(isPresented: $shouldNavigateToAllSurveys) {
                 AllSurveyCreatorView(
                     context: viewContext,
                     currentUser: vm.user!
                 )
-            case "pointsPage":
-                Text("Points Detail Page")  // <-- ganti nanti
-            default:
-                EmptyView()
             }
-        }
+            
+            // 2. Programmatic Navigation for Points (The one that works)
+            .navigationDestination(isPresented: $shouldNavigateToPoints) {
+                ViewPointView()
+            }
 
     }
 
@@ -163,6 +164,8 @@ struct StatCardView: View {
     var label: String
     var showMore: Bool = false
     var onMoreTap: (() -> Void)? = nil
+    
+    @State private var shouldNavigateToViewpoints = false
     var body: some View {
         VStack(spacing: 6) {
             Text(label)
@@ -250,3 +253,7 @@ struct DraftCard: View {
         .shadow(color: .gray.opacity(0.3), radius: 6, x: 2, y: 4)
     }
 }
+
+//#Preview {
+//    AllSurveyCreatorView()
+//}
