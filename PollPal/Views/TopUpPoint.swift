@@ -86,6 +86,7 @@ struct TopUpPoint: View {
                 
                 // MARK: Payment Method Section
                 VStack(alignment: .leading, spacing: 10) {
+                    let userPhone = loggedInUser.first?.user_hp ?? "N/A"
                     
                     Text("Payment Method")
                         .font(.title3)
@@ -98,7 +99,7 @@ struct TopUpPoint: View {
                             icon: "gopay",
                             title: "GoPay",
                             method: "GoPay",
-                            phone: "08 ***8 ****",
+                            phone: userPhone,
                             selectedMethod: $selectedMethod
                         )
                         
@@ -108,7 +109,7 @@ struct TopUpPoint: View {
                             icon: "ovo",
                             title: "OVO",
                             method: "OVO",
-                            phone: "08 ***8 ****",
+                            phone: userPhone,
                             selectedMethod: $selectedMethod
                         )
                         
