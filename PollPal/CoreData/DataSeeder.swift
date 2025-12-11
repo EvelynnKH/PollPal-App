@@ -217,7 +217,7 @@ struct DataSeeder {
         trans2.transaction_id = UUID()
         trans2.transaction_point_change = 50
         trans2.transaction_description =
-            "Reward mengisi survey: Kepuasan Customer"
+            "Reward for filling in Survey: Kepuasan Customer"
         trans2.transaction_status_del = false
         trans2.owned_by_user = felicia
         trans2.in_survey = survey1
@@ -228,7 +228,7 @@ struct DataSeeder {
         trans3.transaction_id = UUID()
         trans3.transaction_point_change = -1000
         trans3.transaction_description =
-            "Biaya membuat survey: Riset Pasar Produk Baru"
+            "Survey Cost: Riset Pasar Produk Baru"
         trans3.transaction_status_del = false
         trans3.owned_by_user = felicia
         trans3.in_survey = survey2
@@ -238,7 +238,7 @@ struct DataSeeder {
         let trans4 = Transaction(context: viewContext)
         trans4.transaction_id = UUID()
         trans4.transaction_point_change = -500
-        trans4.transaction_description = "Withdraw poin ke e-wallet"
+        trans4.transaction_description = "Withdraw Points"
         trans4.transaction_status_del = false
         trans4.owned_by_user = felicia
         trans4.transaction_created_at = Date() - 3600 * 2  // 2 hours ago
