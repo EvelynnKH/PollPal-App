@@ -14,42 +14,64 @@ struct AvailableSurvey: Identifiable {
     let category: String
     let reward: Int?
     let estimatedTime: Int?
+    let deadline: Date? // 1. Property Baru
     let originEntity: Survey
     
     // Init khusus dari Core Data Entity
     init(entity: Survey) {
-        // 1. Handling ID (Langsung ambil karena sudah UUID)
-        // Jika nil, kita buat UUID baru agar tidak crash/error
         self.id = entity.survey_id ?? UUID()
-        
         self.title = entity.survey_title ?? "Tanpa Judul"
         
-        // 2. Handling Many-to-Many Category (CRITICAL PART)
-        // Relasi 'has_category' di Core Data adalah NSSet. Kita perlu cast ke Set<Category>
+        // Handling Category
         if let categorySet = entity.has_category as? Set<Category> {
-            // Ambil nama category, filter yang nil, lalu gabungkan dengan koma
             let names = categorySet.compactMap { $0.category_name }
-            
             if names.isEmpty {
                 self.category = "Uncategorized"
             } else {
-                // Contoh hasil: "Technology, Design"
                 self.category = names.sorted().joined(separator: ", ")
             }
         } else {
             self.category = "Uncategorized"
         }
         
-        // 3. Mapping Reward
+        // Handling Reward (Sesuai Core Data)
         self.reward = Int(entity.survey_rewards_points)
         
-        // 4. Estimasi Waktu (Logic: Jumlah Soal x 1 Menit)
-        if let questions = entity.has_question {
-            self.estimatedTime = 10 * 1
+        if let questions = entity.has_question, questions.count > 0 {
+            let count = Double(questions.count)
+            
+            // Asumsi: 1 soal = 30 detik (0.5 menit)
+            let durationInMinutes = count * 0.5
+            
+            // Bulatkan ke atas
+            let calculatedDuration = Int(ceil(durationInMinutes))
+            
+            // Gunakan fungsi max() untuk memastikan minimal 1 menit
+            // Jadi kita hanya melakukan assignment ke self.estimatedTime SATU KALI
+            self.estimatedTime = max(1, calculatedDuration)
+            
         } else {
+            // Jika tidak ada soal, set 0
             self.estimatedTime = 0
         }
         
+        // 2. Mapping Deadline
+        self.deadline = entity.survey_deadline
+        
         self.originEntity = entity
+    }
+    
+    // Helper untuk format tanggal (Biar rapi di View)
+    var formattedDeadline: String {
+        guard let date = deadline else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM yyyy" // Contoh: 12 Dec 2025
+        return formatter.string(from: date)
+    }
+    
+    // Helper untuk cek apakah sudah expired (Opsional, buat warna merah nanti)
+    var isExpired: Bool {
+        guard let date = deadline else { return false }
+        return date < Date()
     }
 }

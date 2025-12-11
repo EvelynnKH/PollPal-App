@@ -113,7 +113,7 @@ struct LoginView: View {
                 Spacer()
                 Text("Don’t have an account?")
                     .foregroundColor(Color(hex: "0C4254"))
-                NavigationLink(destination: SignUpView()) {
+                NavigationLink(destination: SignUpPersonalView(context: viewContext)) {
                     Text("Sign Up")
                         .font(.headline.bold())
                         .foregroundColor(Color(hex: "0C4254"))

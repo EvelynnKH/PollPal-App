@@ -40,4 +40,20 @@ class SurveyDetailViewModel: ObservableObject {
         }
         return []
     }
+    
+    var deadlineString: String {
+        guard let date = survey.survey_deadline else { return "No Deadline" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM yyyy" // Contoh: 12 Dec 2025
+        return formatter.string(from: date)
+    }
+
+    var isExpired: Bool {
+        guard let date = survey.survey_deadline else { return false }
+        return date < Date()
+    }
+
+    var hasDeadline: Bool {
+        return survey.survey_deadline != nil
+    }
 }
