@@ -254,6 +254,3 @@ struct DraftCard: View {
     }
 }
 
-//#Preview {
-//    AllSurveyCreatorView()
-//}
