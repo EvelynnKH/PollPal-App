@@ -99,6 +99,33 @@ class SurveyViewModel: ObservableObject {
             print("❌ Failed to save context:", error)
         }
     }
+    
+    func saveCategories(_ categories: [String], for survey: Survey) {
+        for name in categories {
+            // Cek kalau category sudah ada
+            let req: NSFetchRequest<Category> = Category.fetchRequest()
+            req.predicate = NSPredicate(format: "category_name == %@", name)
+
+            let existing = try? context.fetch(req).first
+
+            let cat: Category
+
+            if let existing = existing {
+                cat = existing   // sudah ada → pakai ini aja
+            } else {
+                // belum ada → create baru
+                cat = Category(context: context)
+                cat.category_id = UUID()
+                cat.category_name = name
+            }
+
+            // MARK: - RELATION
+            cat.addToIn_survey(survey)
+        }
+
+        saveContext()
+    }
+
 
     private func printSurveyAttributes() {
         print("------------ SURVEY DATA ------------")
