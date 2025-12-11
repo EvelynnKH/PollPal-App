@@ -193,7 +193,7 @@ struct DataSeeder {
         dRes1.dresponse_id = UUID()
         dRes1.in_hresponse = hRes  // Link ke Header
         dRes1.in_question = q1  // Link ke Pertanyaan
-        dRes1.has_option = opt1_yes  // Link ke Opsi yang dipilih
+        dRes1.has_option = NSSet(array: [opt1_yes])   // Link ke Opsi yang dipilih
         dRes1.dresponse_answer_text = opt1_yes.option_text  // Simpan text juga
 
         let dRes2 = DResponse(context: viewContext)

@@ -1,4 +1,3 @@
-
 //
 //  ResponseRendered.swift
 //  PollPal
@@ -6,8 +5,8 @@
 //  Created by student on 09/12/25.
 //
 
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct ResponseRendered: View {
     var question: Question
@@ -21,6 +20,19 @@ struct ResponseRendered: View {
                 .foregroundColor(Color(hex: "1F3A45"))
 
             Divider()
+
+            // DEBUG: tampilkan semua DResponse untuk question ini
+            VStack(alignment: .leading, spacing: 4) {
+                Text("DEBUG — Jawaban tersimpan:")
+                    .font(.caption).foregroundColor(.red)
+
+                ForEach(responses, id: \.dresponse_id) { r in
+                    Text("• \(r.dresponse_answer_text ?? "<empty>")")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            .padding(.bottom, 8)
 
             // Card body: beri max height agar tiap soal punya scroll sendiri
             Group {
@@ -42,8 +54,10 @@ struct ResponseRendered: View {
                     TextResponsesList(responses: responses)
 
                 default:
-                    Text("Unsupported Question Type: \(question.question_type ?? "")")
-                        .foregroundColor(.gray)
+                    Text(
+                        "Unsupported Question Type: \(question.question_type ?? "")"
+                    )
+                    .foregroundColor(.gray)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -55,54 +69,58 @@ struct ResponseRendered: View {
         .shadow(color: Color.black.opacity(0.06), radius: 6, y: 3)
         .padding(.horizontal)
     }
-}
 
+}
 
 // MARK: - PIE CHART (Multiple Choice / Drop Down)
 private struct PieChartForOptions: View {
     let responses: [DResponse]
 
     var body: some View {
-        let items = counts.sorted { $0.value > $1.value }
+        let data = counts
+        let total = responses.count
 
-        VStack(alignment: .leading) {
-            if items.isEmpty {
-                Text("No responses yet")
-                    .foregroundColor(.secondary)
-                    .padding()
+        VStack {
+            if data.isEmpty {
+                Text("No responses yet").foregroundColor(.secondary)
             } else {
-                Chart {
-                    ForEach(items, id: \.key) { (label, value) in
-                        SectorMark(
-                            angle: .value("Count", value),
-                            innerRadius: .ratio(0.5),
-                            angularInset: 1
-                        )
-                        .foregroundStyle(by: .value("Option", label))
-                        .annotation(position: .overlay, alignment: .center) {
-                            // no overlay labels here — keep chart clean
-                            EmptyView()
-                        }
+                Chart(data, id: \.key) { item in
+                    SectorMark(
+                        angle: .value("Count", item.value),
+                        innerRadius: .ratio(0.5),
+                        angularInset: 1.5
+                    )
+                    .foregroundStyle(by: .value("Option", item.key))
+                    .annotation(position: .overlay) {
+                        Text("\(item.value)")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
                     }
                 }
-                .chartLegend(.visible)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .chartLegend(position: .bottom, spacing: 20)
+                
+                // Summary Text
+                Text("Total: \(total) Responses")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .padding(.top, 4)
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical)
     }
 
-    private var counts: [String: Int] {
+    // Helper: Count occurrences of each option string
+    private var counts: [(key: String, value: Int)] {
         var dict: [String: Int] = [:]
         for r in responses {
             let txt = (r.dresponse_answer_text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            if txt.isEmpty { continue }
-            dict[txt, default: 0] += 1
+            if !txt.isEmpty {
+                dict[txt, default: 0] += 1
+            }
         }
-        return dict
+        return dict.sorted { $0.value > $1.value }
     }
 }
-
 
 // MARK: - CHECKBOX (Horizontal Bar Chart)
 private struct CheckboxHorizontalBarChart: View {
@@ -115,41 +133,45 @@ private struct CheckboxHorizontalBarChart: View {
             if data.isEmpty {
                 Text("No responses yet").foregroundColor(.secondary)
             } else {
-                ScrollView { // allow internal vertical scroll if too many options
-                    Chart {
-                        ForEach(data, id: \.label) { item in
-                            BarMark(
-                                x: .value("Count", item.value),
-                                y: .value("Option", item.label)
-                            )
-                        }
+                Chart(data, id: \.label) { item in
+                    BarMark(
+                        x: .value("Count", item.value),
+                        y: .value("Option", item.label) // Label on Y axis for horizontal
+                    )
+                    .foregroundStyle(Color.orange) // Brand color
+                    .annotation(position: .trailing) {
+                        Text("\(item.value)")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                     }
-                    .chartXAxis(.visible)
-                    .chartYAxis(.hidden)
-                    .frame(height: CGFloat(min(40 * data.count, 220)))
+                }
+                // IMPORTANT: Make sure axes are visible
+                .chartXAxis {
+                    AxisMarks(position: .bottom)
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisValueLabel() // Ensure labels like "Option 1" are shown
+                    }
                 }
             }
         }
-        .padding(.vertical, 6)
+        .padding()
     }
 
-    // returns sorted [(label, value)]
     private var countsSorted: [(label: String, value: Int)] {
         var dict: [String: Int] = [:]
         for r in responses {
-            let text = r.dresponse_answer_text ?? ""
-            let parts = text
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            for p in parts where !p.isEmpty {
-                dict[p, default: 0] += 1
+            let txt = (r.dresponse_answer_text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !txt.isEmpty {
+                dict[txt, default: 0] += 1
             }
         }
+        // Sort by highest count first
         return dict.map { (label: $0.key, value: $0.value) }
-            .sorted { $0.value > $1.value }
+                   .sorted { $0.value > $1.value }
     }
 }
-
 
 // MARK: - LINEAR SCALE (Vertical Bar Chart)
 private struct LinearScaleChart: View {
@@ -158,45 +180,52 @@ private struct LinearScaleChart: View {
     var body: some View {
         let data = countsSorted
 
-        VStack(alignment: .leading, spacing: 8) {
+        VStack {
             if data.isEmpty {
                 Text("No responses yet").foregroundColor(.secondary)
             } else {
-                Chart {
-                    ForEach(data, id: \.label) { item in
-                        BarMark(
-                            x: .value("Scale", item.label),
-                            y: .value("Count", item.value)
-                        )
+                Chart(data, id: \.label) { item in
+                    BarMark(
+                        x: .value("Scale", item.label), // "1", "2", "3"...
+                        y: .value("Count", item.value)
+                    )
+                    .foregroundStyle(Color(hex: "0C4254")) // Brand Dark Teal
+                    .annotation(position: .top) {
+                        Text("\(item.value)")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: data.map { $0.label }) { _ in
-                        AxisGridLine()
-                        AxisTick()
+                    AxisMarks(values: .automatic) { _ in
                         AxisValueLabel()
                     }
                 }
-                .frame(height: 220)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
             }
         }
-        .padding(.vertical, 6)
+        .padding()
     }
 
-    // parse numeric answers -> counts; label as string for x-axis
     private var countsSorted: [(label: String, value: Int)] {
         var dict: [Int: Int] = [:]
+        
+        // Initialize 1-5 with 0 to show empty bars too (Optional, makes chart look better)
+        for i in 1...5 { dict[i] = 0 }
+
         for r in responses {
             if let v = Int(r.dresponse_answer_text ?? "") {
                 dict[v, default: 0] += 1
             }
         }
-        // ensure keys sorted ascending (1..n) even when some missing
+        
+        // Sort by Scale Number (1 -> 5)
         let keys = dict.keys.sorted()
         return keys.map { (label: "\($0)", value: dict[$0] ?? 0) }
     }
 }
-
 
 // MARK: - TEXT RESPONSES (Short / Paragraph)
 private struct TextResponsesList: View {

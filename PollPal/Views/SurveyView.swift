@@ -54,9 +54,20 @@ struct SurveyView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                        Text("Please Add Your Question...")
-                            .font(.caption)
-                            .foregroundColor(.white)
+                        // --- LOGIC GANTI TEXT HEADER ---
+                        if selectedTab == 0 {
+                            Text("Please Add Your Question...")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        } else {
+                            // Hitung total responses dari semua pertanyaan (atau logic lain sesuai kebutuhan)
+                            // Disini saya ambil contoh menghitung total HResponse yang terkait survei ini
+                            let totalResp = survey.has_hresponse?.count ?? 0
+                            Text("Total Responses: \(totalResp)")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        }
+                        // -------------------------------
 
                         HStack {
                             tabButton(title: "Questions", index: 0)
@@ -84,7 +95,10 @@ struct SurveyView: View {
             }
             .padding(.bottom, 100)
 
-            bottomStickyBar
+            // --- HANYA TAMPILKAN BOTTOM BAR JIKA DI TAB QUESTIONS ---
+            if selectedTab == 0 {
+                bottomStickyBar
+            }
 
         }
     }
@@ -191,9 +205,9 @@ struct SurveyView: View {
     }
 
     // MARK: Responses Tab Content
-//    private func responses(for question: Question) -> [DResponse] {
-//        vm.responses.filter { $0.in_question == question }
-//    }
+    //    private func responses(for question: Question) -> [DResponse] {
+    //        vm.responses.filter { $0.in_question == question }
+    //    }
 
     private var responsesTabContent: some View {
         ScrollView {
@@ -210,10 +224,9 @@ struct SurveyView: View {
             .padding(.vertical)
         }
         .onAppear {
-            vm.fetchResponses()   // pastikan selalu refresh
+            vm.fetchResponses()  // pastikan selalu refresh
         }
     }
-
 
     // MARK: Sticky Bottom Bar
     private var bottomStickyBar: some View {
