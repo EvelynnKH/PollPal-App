@@ -42,15 +42,22 @@
     </entity>
     <entity name="Survey" representedClassName="Survey" syncable="YES" codeGenerationType="class">
         <attribute name="is_public" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="survey_birthplace" optional="YES" attributeType="String"/>
         <attribute name="survey_created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="survey_deadline" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="survey_description" optional="YES" attributeType="String"/>
+        <attribute name="survey_gender" optional="YES" attributeType="String"/>
         <attribute name="survey_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="survey_img_url" optional="YES" attributeType="String"/>
         <attribute name="survey_points" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="survey_residence" optional="YES" attributeType="String"/>
         <attribute name="survey_rewards_points" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="survey_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="survey_target_responden" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="survey_title" optional="YES" attributeType="String"/>
         <attribute name="survey_updated_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="survey_usia_max" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="survey_usia_min" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="has_category" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Category" inverseName="in_survey" inverseEntity="Category"/>
         <relationship name="has_hresponse" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="HResponse" inverseName="in_survey" inverseEntity="HResponse"/>
         <relationship name="has_question" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Question" inverseName="in_survey" inverseEntity="Question"/>
@@ -68,14 +75,20 @@
         <relationship name="owned_by_user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="has_transaction" inverseEntity="User"/>
     </entity>
     <entity name="User" representedClassName="User" syncable="YES" codeGenerationType="class">
+        <attribute name="user_birthdate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="user_birthplace" optional="YES" attributeType="String"/>
         <attribute name="user_created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="user_email" optional="YES" attributeType="String"/>
+        <attribute name="user_gender" optional="YES" attributeType="String"/>
         <attribute name="user_header_img" optional="YES" attributeType="String"/>
+        <attribute name="user_hp" optional="YES" attributeType="String"/>
         <attribute name="user_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="user_ktm_img" optional="YES" attributeType="String"/>
         <attribute name="user_name" optional="YES" attributeType="String"/>
         <attribute name="user_point" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="user_profile_img" optional="YES" attributeType="String"/>
         <attribute name="user_pwd" optional="YES" attributeType="String"/>
+        <attribute name="user_residence" optional="YES" attributeType="String"/>
         <attribute name="user_status_del" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <relationship name="filled_hresponse" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="HResponse" inverseName="is_filled_by_user" inverseEntity="HResponse"/>
         <relationship name="has_survey" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Survey" inverseName="owned_by_user" inverseEntity="Survey"/>
