@@ -79,7 +79,7 @@ struct ForgotPasswordView: View {
                             .font(.subheadline)
                             .foregroundColor(.gray)
                         
-                        NavigationLink(destination: SignUpView()) {
+                        NavigationLink(destination: SignUpPersonalView(context: viewContext)) {
                             Text("Sign Up")
                                 .font(.headline)
                                 .fontWeight(.bold)

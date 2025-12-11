@@ -76,42 +76,63 @@ struct ListSurveyView: View {
     }
 }
 
+
 struct SurveyAvailableRow: View {
     
-    // Pastikan ini menggunakan struct AvailableSurvey yang sudah kita update
     let item: AvailableSurvey
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             
-            // Category
-            Text(item.category)
-                .font(.caption)
-                .foregroundColor(.gray)
+            // MARK: - Header (Category & Deadline)
+            HStack {
+                // Kategori (Kiri)
+                Text(item.category)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+                Spacer()
+                
+                // Deadline (Kanan Atas) - PERUBAHAN DISINI
+                if let _ = item.deadline {
+                    HStack(spacing: 4) {
+                        Text("Until: \(item.formattedDeadline)")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                    // Jika expired warnanya merah, jika tidak abu-abu
+                    .foregroundColor(item.isExpired ? .red : .gray)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.1)) // Background tipis biar rapi
+                    .cornerRadius(8)
+                }
+            }
             
             // Title
             Text(item.title)
                 .font(.headline)
-                // Pastikan extension Color(hex:) ada di project kamu
                 .foregroundColor(Color(hex: "#0C4254"))
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
-                .padding(.bottom, 15)
+                .padding(.bottom, 5) // Jarak sedikit dikurangi biar compact
             
+            // MARK: - Footer (Points, Time, Button)
             HStack(spacing: 20) {
                 
-                // Unwrapping Optional Reward
+                // Reward Points (Dari Core Data)
                 if let reward = item.reward, reward > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "star.fill")
                             .foregroundColor(Color(hex: "#FE982A"))
                         Text("\(reward) pts")
                             .font(.caption)
+                            .fontWeight(.bold)
                             .foregroundColor(Color(hex: "#FE982A"))
                     }
                 }
                 
-                // Unwrapping Optional Estimated Time
+                // Estimated Time (Tidak Dihapus)
                 if let time = item.estimatedTime, time > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "clock")
@@ -124,16 +145,15 @@ struct SurveyAvailableRow: View {
                 
                 Spacer()
                 
+                // Start Button Label
                 Text("Start Now →")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(Color(hex: "#FE982A"))
-                    .padding(.horizontal)
                     .underline()
             }
         }
         .padding()
-        // Mengatur lebar agar konsisten, sesuaikan dengan desainmu
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white)
         .cornerRadius(12)

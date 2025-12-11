@@ -8,28 +8,96 @@
 import CoreData
 import Foundation
 import SwiftUI
+import PhotosUI
 
 class SignUpViewModel: ObservableObject {
-    // Input dari User
-    @Published var email = ""
-    @Published var password = ""
-    @Published var fullName = ""
+    // MARK: - STEP 1 DATA (Personal Info)
+    @Published var fullName: String = ""
+    @Published var gender: String = "Female"
+    @Published var birthDate: Date = Date()
+    @Published var placeOfBirth: String = ""
+    @Published var placeOfResidence: String = ""
+    @Published var phoneNumber: String = ""
+    
+    // Image handling (KTM)
+    @Published var selectedPhotoItem: PhotosPickerItem? = nil {
+        didSet { processPhoto() }
+    }
+    @Published var ktmImage: UIImage? = nil
+    
+    // MARK: - STEP 2 DATA (Credentials)
+    @Published var email: String = ""
+    @Published var password: String = ""
 
-    // Status UI
-    @Published var errorMessage = ""
-    @Published var showError = false
-    @Published var isRegistered = false  // Pemicu navigasi ke Dashboard
+    // MARK: - Status UI
+    @Published var errorMessage: String = ""
+    @Published var showError: Bool = false
+    
+    @Published var isStep1Valid: Bool = false
+    @Published var isRegistered: Bool = false
 
     private var viewContext: NSManagedObjectContext
 
     init(context: NSManagedObjectContext) {
         self.viewContext = context
     }
+    
+    // MARK: - VALIDASI STEP 1 (UPDATED)
+    func validateStep1() {
+        // 1. Cek apakah ada field text yang kosong (atau hanya spasi)
+        if fullName.trimmingCharacters(in: .whitespaces).isEmpty ||
+           placeOfBirth.trimmingCharacters(in: .whitespaces).isEmpty ||
+           placeOfResidence.trimmingCharacters(in: .whitespaces).isEmpty {
+            
+            showError(msg: "Please fill in all personal details (Name, Birth Place, Residence).")
+            return
+        }
+        
+        // 2. Validasi Khusus Phone Number
+        // Cek kosong
+        if phoneNumber.trimmingCharacters(in: .whitespaces).isEmpty {
+            showError(msg: "Phone number is required.")
+            return
+        }
+        
+        // Cek hanya angka
+        if !phoneNumber.allSatisfy({ $0.isNumber }) {
+            showError(msg: "Phone number must contain only numbers.")
+            return
+        }
+        
+        // Cek panjang minimal (opsional, sesuaikan kebutuhan, misal min 10 digit)
+        if phoneNumber.count < 10 {
+            showError(msg: "Phone number must be at least 10 digits.")
+            return
+        }
+        
+        // 3. Cek Foto KTM
+        if ktmImage == nil {
+            showError(msg: "Please upload your ID Card photo.")
+            return
+        }
+        
+        
+        // Jika semua lolos, lanjut ke Step 2
+        isStep1Valid = true
+    }
+    
+    private func processPhoto() {
+        guard let item = selectedPhotoItem else { return }
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                await MainActor.run { self.ktmImage = uiImage }
+            }
+        }
+    }
 
+    // MARK: - FINAL REGISTER LOGIC
     func registerUser() {
-        // 1. Validasi Input Kosong
-        guard !email.isEmpty, !password.isEmpty, !fullName.isEmpty else {
-            showError(msg: "Please fill in all fields.")
+        // 1. Validasi Input Step 2
+        guard !email.isEmpty, !password.isEmpty else {
+            showError(msg: "Please fill in email and password.")
             return
         }
 
@@ -39,51 +107,57 @@ class SignUpViewModel: ObservableObject {
             return
         }
 
-        // --- 3. VALIDASI PASSWORD (BARU) ---
+        // 3. Validasi Password
         if !isValidPassword(password) {
-            // Pesan error yang detail
             showError(
-                msg:
-                    "Password must be at least 8 characters, containing letters, numbers, and symbols."
+                msg: "Password must be at least 8 characters, containing letters, numbers, and symbols."
             )
             return
         }
 
-        // 4. Validasi Email Unik (Cek Database)
+        // 4. Validasi Email Unik
         if emailExists(email: email) {
             showError(msg: "This email is already registered.")
             return
         }
 
-        // 3. Buat User Baru
+        // 5. Buat User Baru (Simpan SEMUA Data)
         let newUser = User(context: viewContext)
         let newUUID = UUID()
 
         newUser.user_id = newUUID
-        newUser.user_email = email
-        newUser.user_pwd = password  // Note: Di aplikasi nyata, password harus di-hash!
-        newUser.user_name = fullName
-
-        // Set Default Value (Penting agar tidak crash/kosong di Dashboard)
-        newUser.user_point = 50  // Welcome Bonus Poin!
         newUser.user_created_at = Date()
         newUser.user_status_del = false
-        newUser.user_header_img = "mountain"  // Gambar default
-        newUser.user_profile_img = "cat"  // Gambar default
+        
+        // Data dari Step 1
+        newUser.user_name = fullName
+        
+        // Pastikan CoreData entity Anda memiliki atribut ini jika ingin disimpan:
+        // newUser.user_phone = phoneNumber
+        // newUser.user_dob = birthDate
+        // newUser.user_pob = placeOfBirth
+        // newUser.user_address = placeOfResidence
+        // newUser.user_gender = gender
+        
+        // Data dari Step 2
+        newUser.user_email = email
+        newUser.user_pwd = password
+        
+        // Data Default
+        newUser.user_point = 50
+        newUser.user_header_img = "mountain"
+        newUser.user_profile_img = "cat"
 
-        // 4. Simpan ke Core Data
+        // 6. Simpan ke Core Data
         do {
             try viewContext.save()
-            print("✅ User berhasil dibuat: \(fullName)")
+            print("✅ User Registered: \(fullName)")
 
-            // 5. Simpan Session Login
-            // Agar Dashboard tahu siapa yang sedang login
             UserDefaults.standard.set(
                 newUUID.uuidString,
                 forKey: "logged_in_user_id"
             )
 
-            // Trigger navigasi ke Dashboard
             self.isRegistered = true
 
         } catch {
@@ -91,20 +165,16 @@ class SignUpViewModel: ObservableObject {
         }
     }
 
-    // Helper: Cek Email di Database
+    // MARK: - Helper Functions
     private func emailExists(email: String) -> Bool {
         let request: NSFetchRequest<User> = User.fetchRequest()
         request.predicate = NSPredicate(format: "user_email == %@", email)
-
         do {
             let count = try viewContext.count(for: request)
             return count > 0
-        } catch {
-            return false
-        }
+        } catch { return false }
     }
 
-    // Helper: Tampilkan Error
     private func showError(msg: String) {
         self.errorMessage = msg
         self.showError = true
@@ -112,31 +182,15 @@ class SignUpViewModel: ObservableObject {
 
     private func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-
         let emailPred = NSPredicate(format: "SELF MATCHES %@", emailRegEx)
         return emailPred.evaluate(with: email)
     }
 
-    // Helper: Validasi Password (Huruf, Angka, Simbol, Min 8 Karakter)
     private func isValidPassword(_ pass: String) -> Bool {
-        // 1. Cek Panjang Karakter (Minimal 8)
-        if pass.count < 8 {
-            return false
-        }
-
-        // 2. Cek apakah ada Huruf (A-Z atau a-z)
+        if pass.count < 8 { return false }
         let hasLetter = pass.rangeOfCharacter(from: .letters) != nil
-
-        // 3. Cek apakah ada Angka (0-9)
         let hasNumber = pass.rangeOfCharacter(from: .decimalDigits) != nil
-
-        // 4. Cek apakah ada Simbol
-        // Logikanya: Simbol adalah karakter yang BUKAN huruf dan BUKAN angka.
-        // .alphanumerics.inverted artinya "Segala sesuatu kecuali huruf dan angka"
-        let hasSymbol =
-            pass.rangeOfCharacter(from: .alphanumerics.inverted) != nil
-
-        // Syarat: Harus memenuhi ketiganya
+        let hasSymbol = pass.rangeOfCharacter(from: .alphanumerics.inverted) != nil
         return hasLetter && hasNumber && hasSymbol
     }
 }
