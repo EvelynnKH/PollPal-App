@@ -5,24 +5,29 @@
 //  Created by student on 08/12/25.
 //
 
-import SwiftUI
 import CoreData
+import SwiftUI
 
 struct SurveyQuestionView: View {
     @StateObject private var viewModel: SurveyQuestionViewModel
-    
+
     // Colors
     let darkTeal = Color(hex: "0C4254")
     let brandOrange = Color(hex: "FE982A")
     let lightGray = Color.gray.opacity(0.1)
-    
+
     init(context: NSManagedObjectContext, survey: Survey) {
-        _viewModel = StateObject(wrappedValue: SurveyQuestionViewModel(context: context, survey: survey))
+        _viewModel = StateObject(
+            wrappedValue: SurveyQuestionViewModel(
+                context: context,
+                survey: survey
+            )
+        )
     }
-    
+
     var body: some View {
         VStack(spacing: 20) {
-            
+
             // MARK: - Progress Header
             VStack(spacing: 8) {
                 HStack {
@@ -31,7 +36,7 @@ struct SurveyQuestionView: View {
                         .foregroundColor(darkTeal)
                     Spacer()
                 }
-                
+
                 // Progress Bar
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
@@ -39,21 +44,28 @@ struct SurveyQuestionView: View {
                         RoundedRectangle(cornerRadius: 5)
                             .fill(lightGray)
                             .frame(height: 6)
-                        
+
                         // Isi Progress (SEKARANG DARK TEAL)
                         RoundedRectangle(cornerRadius: 5)
-                            .fill(darkTeal) // <--- PERUBAHAN DISINI
-                            .frame(width: geo.size.width * CGFloat(viewModel.progressFraction), height: 6)
-                            .animation(.linear, value: viewModel.progressFraction)
+                            .fill(darkTeal)  // <--- PERUBAHAN DISINI
+                            .frame(
+                                width: geo.size.width
+                                    * CGFloat(viewModel.progressFraction),
+                                height: 6
+                            )
+                            .animation(
+                                .linear,
+                                value: viewModel.progressFraction
+                            )
                     }
                 }
                 .frame(height: 6)
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
-            
+
             Divider()
-            
+
             // MARK: - Question Content
             if let question = viewModel.currentQuestion {
                 ScrollView {
@@ -62,32 +74,42 @@ struct SurveyQuestionView: View {
                         Text(question.question_text ?? "")
                             .font(.title3.bold())
                             .foregroundColor(darkTeal)
-                        
+
                         // --- UI SWITCHER ---
                         let type = question.question_type ?? ""
                         let qID = question.question_id!
-                        
-                        let options = (question.has_option as? Set<Option>)?
-                            .sorted { ($0.option_text ?? "") < ($1.option_text ?? "") } ?? []
-                        
+
+                        let options =
+                            (question.has_option as? Set<Option>)?
+                            .sorted {
+                                ($0.option_text ?? "") < ($1.option_text ?? "")
+                            } ?? []
+
                         switch type {
                         case "Multiple Choice":
                             ForEach(options, id: \.option_id) { option in
                                 OptionRow(
                                     text: option.option_text ?? "",
-                                    isSelected: viewModel.singleSelectionAnswers[qID] == option.option_id,
+                                    isSelected:
+                                        viewModel.singleSelectionAnswers[qID]
+                                        == option.option_id,
                                     iconName: "circle",
                                     selectedIconName: "circle.inset.filled",
-                                    color: darkTeal // Opsional: Bisa diubah ke darkTeal juga jika mau konsisten
+                                    color: darkTeal  // Opsional: Bisa diubah ke darkTeal juga jika mau konsisten
                                 )
                                 .onTapGesture {
-                                    viewModel.selectSingleOption(questionId: qID, optionId: option.option_id!)
+                                    viewModel.selectSingleOption(
+                                        questionId: qID,
+                                        optionId: option.option_id!
+                                    )
                                 }
                             }
-                            
+
                         case "Check Box":
                             ForEach(options, id: \.option_id) { option in
-                                let isSelected = viewModel.multiSelectionAnswers[qID]?.contains(option.option_id!) ?? false
+                                let isSelected =
+                                    viewModel.multiSelectionAnswers[qID]?
+                                    .contains(option.option_id!) ?? false
                                 OptionRow(
                                     text: option.option_text ?? "",
                                     isSelected: isSelected,
@@ -96,21 +118,31 @@ struct SurveyQuestionView: View {
                                     color: darkTeal
                                 )
                                 .onTapGesture {
-                                    viewModel.toggleMultiOption(questionId: qID, optionId: option.option_id!)
+                                    viewModel.toggleMultiOption(
+                                        questionId: qID,
+                                        optionId: option.option_id!
+                                    )
                                 }
                             }
-                            
+
                         case "Drop Down":
                             Menu {
                                 ForEach(options, id: \.option_id) { option in
                                     Button(option.option_text ?? "") {
-                                        viewModel.selectSingleOption(questionId: qID, optionId: option.option_id!)
+                                        viewModel.selectSingleOption(
+                                            questionId: qID,
+                                            optionId: option.option_id!
+                                        )
                                     }
                                 }
                             } label: {
                                 HStack {
-                                    if let selectedID = viewModel.singleSelectionAnswers[qID],
-                                       let selectedOpt = options.first(where: { $0.option_id == selectedID }) {
+                                    if let selectedID =
+                                        viewModel.singleSelectionAnswers[qID],
+                                        let selectedOpt = options.first(where: {
+                                            $0.option_id == selectedID
+                                        })
+                                    {
                                         Text(selectedOpt.option_text ?? "")
                                             .foregroundColor(darkTeal)
                                     } else {
@@ -122,45 +154,104 @@ struct SurveyQuestionView: View {
                                         .foregroundColor(darkTeal)
                                 }
                                 .padding()
-                                .background(RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.3), lineWidth: 1))
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12).stroke(
+                                        Color.gray.opacity(0.3),
+                                        lineWidth: 1
+                                    )
+                                )
                             }
-                            
+
                         case "Linear Scale":
-                            HStack {
-                                ForEach(options, id: \.option_id) { option in
-                                    let isSelected = viewModel.singleSelectionAnswers[qID] == option.option_id
-                                    
-                                    VStack {
-                                        Text(option.option_text ?? "")
-                                            .fontWeight(.bold)
-                                            .foregroundColor(isSelected ? .white : darkTeal)
-                                    }
-                                    .frame(width: 40, height: 40)
-                                    .background(isSelected ? darkTeal : Color.white) // Ubah warna seleksi jadi Teal
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(isSelected ? darkTeal : Color.gray.opacity(0.3), lineWidth: 1))
-                                    .onTapGesture {
-                                        viewModel.selectSingleOption(questionId: qID, optionId: option.option_id!)
+                            // PENTING: Urutkan opsi berdasarkan Angka (Int), bukan String
+                            // Ini memastikan "10" tidak muncul sebelum "2" jika ada.
+                            let scaleOptions = options.sorted {
+                                (Int($0.option_text ?? "0") ?? 0)
+                                    < (Int($1.option_text ?? "0") ?? 0)
+                            }
+
+                            HStack(spacing: 12) {  // Spacing antar lingkaran
+                                if scaleOptions.isEmpty {
+                                    // Fallback jika opsi kosong (misal data lama belum diupdate)
+                                    Text("No scale options available")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                } else {
+                                    ForEach(scaleOptions, id: \.option_id) {
+                                        option in
+                                        let isSelected =
+                                            viewModel.singleSelectionAnswers[
+                                                qID
+                                            ] == option.option_id
+
+                                        VStack(spacing: 8) {
+                                            // Lingkaran Angka
+                                            ZStack {
+                                                Circle()
+                                                    .stroke(
+                                                        isSelected
+                                                            ? darkTeal
+                                                            : Color.gray
+                                                                .opacity(0.3),
+                                                        lineWidth: 2
+                                                    )
+                                                    .background(
+                                                        Circle().fill(
+                                                            isSelected
+                                                                ? darkTeal
+                                                                : Color.white
+                                                        )
+                                                    )
+                                                    .frame(
+                                                        width: 44,
+                                                        height: 44
+                                                    )  // Ukuran sedikit diperbesar
+
+                                                Text(option.option_text ?? "?")
+                                                    .font(.headline)
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(
+                                                        isSelected
+                                                            ? .white : darkTeal
+                                                    )
+                                            }
+                                        }
+                                        .onTapGesture {
+                                            viewModel.selectSingleOption(
+                                                questionId: qID,
+                                                optionId: option.option_id!
+                                            )
+                                        }
                                     }
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.vertical)
-                            
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+
                         case "Short Answer":
-                            TextField("Your answer...", text: viewModel.bindingForText(questionId: qID))
-                                .padding()
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(10)
-                            
+                            TextField(
+                                "Your answer...",
+                                text: viewModel.bindingForText(questionId: qID)
+                            )
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(10)
+
                         case "Paragraph":
-                            TextEditor(text: viewModel.bindingForText(questionId: qID))
-                                .frame(height: 120)
-                                .padding(8)
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(10)
-                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.2), lineWidth: 1))
-                            
+                            TextEditor(
+                                text: viewModel.bindingForText(questionId: qID)
+                            )
+                            .frame(height: 120)
+                            .padding(8)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10).stroke(
+                                    Color.gray.opacity(0.2),
+                                    lineWidth: 1
+                                )
+                            )
+
                         default:
                             Text("Unknown question type: \(type)")
                         }
@@ -170,21 +261,25 @@ struct SurveyQuestionView: View {
             } else {
                 Spacer()
             }
-            
+
             Spacer()
-            
+
             // MARK: - Navigation Buttons
             HStack(spacing: 15) {
                 if viewModel.currentIndex > 0 {
                     Button("Previous") { viewModel.prevPage() }
                         .buttonStyle(SecondaryButtonStyle(color: darkTeal))
                 }
-                
+
                 Button(viewModel.isLastQuestion ? "Submit" : "Next") {
                     viewModel.nextPage()
                 }
                 // SEKARANG TOMBOL NEXT JUGA DARK TEAL
-                .buttonStyle(PrimaryButtonStyle(color: viewModel.canGoNext ? darkTeal : .gray)) // <--- PERUBAHAN DISINI
+                .buttonStyle(
+                    PrimaryButtonStyle(
+                        color: viewModel.canGoNext ? darkTeal : .gray
+                    )
+                )  // <--- PERUBAHAN DISINI
                 .disabled(!viewModel.canGoNext)
             }
             .padding(24)
@@ -204,7 +299,7 @@ struct OptionRow: View {
     let iconName: String
     let selectedIconName: String
     let color: Color
-    
+
     var body: some View {
         HStack(spacing: 15) {
             Image(systemName: isSelected ? selectedIconName : iconName)
@@ -220,7 +315,12 @@ struct OptionRow: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(isSelected ? color.opacity(0.1) : Color.white)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(isSelected ? color : Color.gray.opacity(0.2), lineWidth: 1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12).stroke(
+                        isSelected ? color : Color.gray.opacity(0.2),
+                        lineWidth: 1
+                    )
+                )
         )
         .contentShape(Rectangle())
     }
@@ -249,7 +349,9 @@ struct SecondaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color.white)
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(color, lineWidth: 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12).stroke(color, lineWidth: 1)
+            )
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
     }
 }
