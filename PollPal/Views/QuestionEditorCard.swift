@@ -42,45 +42,62 @@ struct QuestionEditorCard: View {
     // Type picker section
     // --------------------------
     private var typePickerSection: some View {
-        HStack {
-            Text(qtype.title)
-                .font(.system(size: 14, weight: .medium))
-
-            Spacer()
-
-            Menu {
-                ForEach(QuestionType.allCases, id: \.rawValue) { type in
-                    Button(type.title) {
-                        qtype = type
-
-                        // persist type on question
-                        question.safeType = type
-
-                        // reset options if needed
-                        if type == .multipleChoice || type == .checkboxes || type == .dropdown {
-                            if question.optionsArray.isEmpty {
-                                question.addOption(text: "Option 1", context: context)
-                                try? context.save()
-                            }
-                        } else {
-                            // if switching away from options-based type, optionally delete options
-                            // (we keep existing options in DB so user can switch back)
+            HStack {
+                Text(qtype.title)
+                    .font(.system(size: 14, weight: .medium))
+                
+                Spacer()
+                
+                Menu {
+                    ForEach(QuestionType.allCases, id: \.rawValue) { type in
+                        Button(type.title) {
+                            // PANGGIL FUNGSI LOGIC DISINI
+                            changeQuestionType(to: type)
                         }
                     }
+                } label: {
+                    Label("Type", systemImage: "chevron.down")
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .foregroundColor(.white)
+                        .background(Capsule().fill(Color.themeOrange))
                 }
-            } label: {
-                Label("Type", systemImage: "chevron.down")
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .foregroundColor(.white)
-                    .background(Capsule().fill(Color.themeOrange))
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
+        }
+    
+    private func changeQuestionType(to type: QuestionType) {
+            // 1. Ubah Tipe di UI Binding & Core Data Object
+            qtype = type
+            question.safeType = type
+            
+            // 2. LOGIKA KHUSUS: LINEAR SCALE
+            // Jika user pilih Linear Scale, otomatis buat opsi 1-5 jika belum ada
+            if type == .linearscale {
+                let currentCount = question.optionsArray.count
+                if currentCount == 0 {
+                    for i in 1...5 {
+                        let opt = Option(context: context)
+                        opt.option_id = UUID()
+                        opt.option_text = "\(i)"
+                        question.addToHas_option(opt) // Link ke question
+                    }
+                    try? context.save()
+                }
+            }
+            
+            // 3. LOGIKA KHUSUS: MULTIPLE CHOICE dkk (Opsional)
+            // Tambah 1 opsi kosong jika user pilih PG tapi belum ada opsi
+            else if [.multipleChoice, .checkboxes, .dropdown].contains(type) {
+                if question.optionsArray.isEmpty {
+                    question.addOption(text: "Option 1", context: context)
+                    try? context.save()
+                }
             }
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 10)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(10)
-    }
 
     // --------------------------
     // Options editor (relationship-based)
