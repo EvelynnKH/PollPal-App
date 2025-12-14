@@ -191,6 +191,7 @@ struct FinishingSurveyView: View {
         .onAppear {
             fetchCategories()
             loadExistingData()  // Menggabungkan load category & metadata lain
+            vm.updateSurveyPoints()
         }
     }
 
@@ -427,6 +428,21 @@ struct FinishingSurveyView: View {
                 }
             }
             .padding(.horizontal)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Total Points Required")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+
+                Text("\(survey.survey_points) pts")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(orange)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.1))
+            .cornerRadius(15)
         }
         .padding(.top, 10)
     }

@@ -14,11 +14,28 @@ enum QuestionType: String, CaseIterable, Identifiable {
     case shortAnswer = "Short Answer"
     case paragraph = "Paragraph"
     case multipleChoice = "Multiple Choice"
-    case checkboxes = "Check Box"       // Perhatikan: Seeder pakai "Check Box"
-    case dropdown = "Drop Down"         // Perhatikan: Seeder pakai "Drop Down"
-    case linearscale = "Linear Scale"   // Perhatikan: Seeder pakai "Linear Scale"
-
+    case checkboxes = "Check Box"  // Perhatikan: Seeder pakai "Check Box"
+    case dropdown = "Drop Down"  // Perhatikan: Seeder pakai "Drop Down"
+    case linearscale = "Linear Scale"  // Perhatikan: Seeder pakai "Linear Scale"
+    
     var id: String { self.rawValue }
+    /// Harga poin per pertanyaan
+    var pointCost: Int {
+        switch self {
+        case .shortAnswer:
+            return 12
+        case .paragraph:
+            return 20
+        case .multipleChoice:
+            return 10  // pilgan
+        case .checkboxes:
+            return 15  // bisa multi pilihan
+        case .dropdown:
+            return 12
+        case .linearscale:
+            return 12
+        }
+    }
 }
 
 // Extension untuk judul tampilan (Optional, tapi bagus untuk UI)

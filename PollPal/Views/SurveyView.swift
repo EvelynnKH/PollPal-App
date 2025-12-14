@@ -86,15 +86,25 @@ struct SurveyView: View {
 
                 // MARK: ScrollView Content
                 ScrollView {
-
-                    if selectedTab == 0 {
-                        editorTabContent.padding(.top, 10)
-                    } else {
+                    if mode == "published" {
+                        // published: hanya boleh tab 1
                         responsesTabContent
+                    } else {
+                        // create & edit
+                        editorTabContent
+                                    .padding(.top, 10)
                     }
-
+                }.onAppear {
+                    selectedTab = (mode == "published") ? 1 : 0
                 }
-
+                .onChange(of: selectedTab) { newTab in
+                    if mode == "published", newTab != 1 {
+                        selectedTab = 1
+                    }
+                    if mode != "published", newTab != 0 {
+                        selectedTab = 0
+                    }
+                }
             }
             .padding(.bottom, 100)
 

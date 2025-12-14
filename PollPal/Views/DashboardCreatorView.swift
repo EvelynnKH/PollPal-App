@@ -100,7 +100,7 @@ struct DashboardCreatorView: View {
                     ForEach(vm.activeSurveys, id: \.self) { survey in
                         NavigationLink(
                             destination: SurveyView(
-                                mode: "edit",  // atau "view", terserah kamu
+                                mode: "published",  // atau "view", terserah kamu
                                 survey: survey,
                                 context: viewContext
                             )

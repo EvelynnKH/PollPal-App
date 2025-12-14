@@ -43,7 +43,21 @@ class SurveyViewModel: ObservableObject {
         q.in_survey = survey
 
         saveContext()
+        updateSurveyPoints()
         loadQuestions()
+    }
+    
+    func calculateTotalPoints() -> Int {
+        var total = 0
+        for q in questions {
+            total += q.safeType.pointCost
+        }
+        return total
+    }
+
+    
+    func updateSurveyPoints() {
+        survey.survey_points = Int32(calculateTotalPoints())
     }
 
     func createSurveyIfNeeded() {
