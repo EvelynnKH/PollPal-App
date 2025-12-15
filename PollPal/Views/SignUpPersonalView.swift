@@ -77,9 +77,55 @@ struct SignUpPersonalView: View {
                             .padding().background(Color(hex: "E0E0E0").opacity(0.8)).cornerRadius(12)
                         }
                     }
+                    let indonesianProvinces = [
+                        "Aceh", "Sumatera Utara", "Sumatera Barat", "Riau", "Jambi", "Sumatera Selatan", "Bengkulu", "Lampung", "Kepulauan Bangka Belitung", "Kepulauan Riau",
+                        "DKI Jakarta", "Jawa Barat", "Jawa Tengah", "DI Yogyakarta", "Jawa Timur", "Banten",
+                        "Bali", "Nusa Tenggara Barat", "Nusa Tenggara Timur",
+                        "Kalimantan Barat", "Kalimantan Tengah", "Kalimantan Selatan", "Kalimantan Timur", "Kalimantan Utara",
+                        "Sulawesi Utara", "Sulawesi Tengah", "Sulawesi Selatan", "Sulawesi Tenggara", "Gorontalo", "Sulawesi Barat",
+                        "Maluku", "Maluku Utara",
+                        "Papua Barat", "Papua", "Papua Tengah", "Papua Pegunungan", "Papua Selatan", "Papua Barat Daya"
+                    ].sorted()
                     
-                    InputGroup(label: "Birthplace", text: $viewModel.placeOfBirth, placeholder: "Enter your birthplace")
-                    InputGroup(label: "Address", text: $viewModel.placeOfResidence, placeholder: "Enter your address")
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Label
+                        Text("Province / Residence")
+                            .font(.subheadline.bold())
+                            .foregroundColor(Color(hex: "0C4254")) // Sesuaikan warna tema Anda
+                        
+                        // Dropdown Menu
+                        Menu {
+                            ForEach(indonesianProvinces, id: \.self) { province in
+                                Button(action: {
+                                    viewModel.placeOfBirth = province
+                                }) {
+                                    HStack {
+                                        Text(province)
+                                        // Tampilkan centang jika dipilih
+                                        if viewModel.placeOfBirth == province {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            // Tampilan Tombol agar mirip TextField
+                            HStack {
+                                Text(viewModel.placeOfBirth.isEmpty ? "Select Birth Place Province" : viewModel.placeOfBirth)
+                                    .foregroundColor(viewModel.placeOfBirth.isEmpty ? .gray : .black)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.15)) // Background abu-abu seperti input lain
+                            .cornerRadius(12)
+                        }
+                    }
                     InputGroup(label: "Phone Number", text: $viewModel.phoneNumber, placeholder: "Enter your phone number", keyboardType: .phonePad)
                     
                     // UPLOAD KTM

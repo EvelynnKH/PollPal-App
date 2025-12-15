@@ -114,11 +114,11 @@ struct EditProfileView: View {
                             .fill(inputBg) // Use the consistent inputBg color
                     )
                 
-                // MARK: - PLACE OF RESIDENCE (Editable)
-                InputLabel(title: "Place of Residence", darkTeal: darkTeal)
-                TextField("Enter your place of residence", text: $viewModel.placeOfResidence)
-                    .foregroundStyle(.black)
-                    .inputStyle(background: inputBg, cornerRadius: 12, tint: darkTeal)
+//                // MARK: - PLACE OF RESIDENCE (Editable)
+//                InputLabel(title: "Place of Residence", darkTeal: darkTeal)
+//                TextField("Enter your place of residence", text: $viewModel.placeOfResidence)
+//                    .foregroundStyle(.black)
+//                    .inputStyle(background: inputBg, cornerRadius: 12, tint: darkTeal)
                 
                 // MARK: - PHONE NUMBER (Editable)
                 InputLabel(title: "Phone Number", darkTeal: darkTeal)
@@ -133,40 +133,40 @@ struct EditProfileView: View {
                 
                 
                 // MARK: - INTERESTS SECTION
-                VStack(alignment: .leading, spacing: 10) {
-                    InputLabel(title: "Interests", darkTeal: darkTeal)
-                    
-                    Text("Select categories you are interested in")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    
-                    // List Kategori Custom
-                    ScrollView {
-                        VStack(spacing: 10) {
-                            // ... (Existing category list logic) ...
-                            if viewModel.allCategories.isEmpty {
-                                Text("No categories available")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                    .padding()
-                            } else {
-                                ForEach(viewModel.allCategories, id: \.self) { category in
-                                    CategoryRowItem(
-                                        title: category.category_name ?? "Unknown",
-                                        isSelected: viewModel.selectedCategories.contains(category),
-                                        darkTeal: darkTeal,
-                                        brandOrange: brandOrange,
-                                        inputBg: inputBg
-                                    )
-                                    .onTapGesture {
-                                        viewModel.toggleCategory(category)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 250) // Constrain height for ScrollView
-                }
+//                VStack(alignment: .leading, spacing: 10) {
+//                    InputLabel(title: "Interests", darkTeal: darkTeal)
+//                    
+//                    Text("Select categories you are interested in")
+//                        .font(.caption)
+//                        .foregroundColor(.gray)
+//                    
+//                    // List Kategori Custom
+//                    ScrollView {
+//                        VStack(spacing: 10) {
+//                            // ... (Existing category list logic) ...
+//                            if viewModel.allCategories.isEmpty {
+//                                Text("No categories available")
+//                                    .font(.caption)
+//                                    .foregroundColor(.gray)
+//                                    .padding()
+//                            } else {
+//                                ForEach(viewModel.allCategories, id: \.self) { category in
+//                                    CategoryRowItem(
+//                                        title: category.category_name ?? "Unknown",
+//                                        isSelected: viewModel.selectedCategories.contains(category),
+//                                        darkTeal: darkTeal,
+//                                        brandOrange: brandOrange,
+//                                        inputBg: inputBg
+//                                    )
+//                                    .onTapGesture {
+//                                        viewModel.toggleCategory(category)
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                    .frame(maxHeight: 250) // Constrain height for ScrollView
+//                }
                 
                 // MARK: - SAVE BUTTON
                 Button(action: {

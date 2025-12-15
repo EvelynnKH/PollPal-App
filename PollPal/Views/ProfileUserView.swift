@@ -237,11 +237,6 @@ extension ProfileUserView {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(darkTeal)
-
-            Text("My Interest: \(viewModel.userInterests)")
-                .font(.subheadline)
-                .foregroundColor(darkTeal)
-                .padding(.bottom, 10)
         }
         .padding(.bottom, 24)
     }
