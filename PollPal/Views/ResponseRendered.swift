@@ -21,19 +21,6 @@ struct ResponseRendered: View {
 
             Divider()
 
-            // DEBUG: tampilkan semua DResponse untuk question ini
-            VStack(alignment: .leading, spacing: 4) {
-                Text("DEBUG — Jawaban tersimpan:")
-                    .font(.caption).foregroundColor(.red)
-
-                ForEach(responses, id: \.dresponse_id) { r in
-                    Text("• \(r.dresponse_answer_text ?? "<empty>")")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
-            }
-            .padding(.bottom, 8)
-
             // Card body: beri max height agar tiap soal punya scroll sendiri
             Group {
                 switch question.question_type {

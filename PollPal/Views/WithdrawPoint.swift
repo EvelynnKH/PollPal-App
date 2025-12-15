@@ -15,6 +15,10 @@ struct WithdrawPoint: View {
         Int(loggedInUser.first?.user_point ?? 0)
     }
     
+    private var userPhone: String {
+        loggedInUser.first?.user_hp ?? "N/A" // Fetches user_hp
+    }
+    
     // Computed property for dynamic Rp value
     private var rupiahValue: Int {
         Int(selectedAmount * 10) // 1 point = 100 Rp
@@ -92,7 +96,7 @@ struct WithdrawPoint: View {
                             icon: "gopay",
                             title: "GoPay",
                             method: "GoPay",
-                            phone: "08*** **** **21",
+                            phone: userPhone,
                             selectedMethod: $selectedMethod
                         )
                         
@@ -102,7 +106,7 @@ struct WithdrawPoint: View {
                             icon: "ovo",
                             title: "OVO",
                             method: "OVO",
-                            phone: "08*** **** **21",
+                            phone: userPhone,
                             selectedMethod: $selectedMethod
                         )
                         

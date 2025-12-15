@@ -3,7 +3,8 @@ import SwiftUI
 
 struct SurveyView: View {
     @Environment(\.managedObjectContext) private var context
-
+    @Environment(\.dismiss) var flowDismiss
+    
     @StateObject var vm: SurveyViewModel
     @State private var selectedTab = 0
     @ObservedObject var survey: Survey
@@ -11,15 +12,15 @@ struct SurveyView: View {
     @State private var selectedImage: UIImage?
     let mode: String
     @State private var tempTitle: String = ""
-
+    
     // State untuk Alert Konfirmasi Finish
     @State private var showFinishAlert = false
-
+    
     init(mode: String, survey: Survey?, context: NSManagedObjectContext) {
         self.mode = mode  // <-- SET VALUE
-
+        
         let surveyToUse: Survey
-
+        
         if mode == "create" {
             let newSurvey = Survey(context: context)
             newSurvey.survey_id = UUID()
@@ -28,9 +29,9 @@ struct SurveyView: View {
         } else {
             surveyToUse = survey!  // <-- untuk edit
         }
-
+        
         self.survey = surveyToUse
-
+        
         _vm = StateObject(
             wrappedValue: SurveyViewModel(
                 context: context,
@@ -38,25 +39,25 @@ struct SurveyView: View {
             )
         )
         self._tempTitle = State(initialValue: surveyToUse.survey_title ?? "")
-
+        
     }
-
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
-
+                
                 // MARK: Header
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading) {
                         Text(
                             (survey.survey_title ?? "").isEmpty
-                                ? "Untitled Survey"
-                                : (survey.survey_title ?? "")
+                            ? "Untitled Survey"
+                            : (survey.survey_title ?? "")
                         )
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-
+                        
                         // --- LOGIC GANTI TEXT HEADER ---
                         if selectedTab == 0 {
                             Text("Please Add Your Question...")
@@ -71,7 +72,7 @@ struct SurveyView: View {
                                 .foregroundColor(.white)
                         }
                         // -------------------------------
-
+                        
                         HStack {
                             tabButton(title: "Questions", index: 0)
                             tabButton(title: "Responses", index: 1)
@@ -83,7 +84,7 @@ struct SurveyView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(hex: "FF9F1C"))
-
+                
                 // MARK: ScrollView Content
                 ScrollView {
                     if mode == "published" {
@@ -92,7 +93,7 @@ struct SurveyView: View {
                     } else {
                         // create & edit
                         editorTabContent
-                                    .padding(.top, 10)
+                            .padding(.top, 10)
                     }
                 }.onAppear {
                     selectedTab = (mode == "published") ? 1 : 0
@@ -107,7 +108,7 @@ struct SurveyView: View {
                 }
             }
             .padding(.bottom, 100)
-
+            
             // MARK: BOTTOM BAR (Dynamic)
             bottomStickyBar
         }
@@ -121,10 +122,10 @@ struct SurveyView: View {
             Text(
                 "This will close the survey. Respondents will no longer be able to submit answers."
             )
-
+            
         }
     }
-
+    
     // MARK: Tab Button
     private func tabButton(title: String, index: Int) -> some View {
         Button(action: { selectedTab = index }) {
@@ -140,21 +141,21 @@ struct SurveyView: View {
                         )
                         .shadow(
                             color: selectedTab == index
-                                ? Color.black.opacity(0.25) : .clear,
+                            ? Color.black.opacity(0.25) : .clear,
                             radius: selectedTab == index ? 6 : 0,
                             y: 3
                         )
                 )
         }
     }
-
+    
     // MARK: Main Editor
     private var editorTabContent: some View {
         VStack(alignment: .leading, spacing: 20) {
-
+            
             // TITLE + DESCRIPTION
             VStack(alignment: .leading, spacing: 5) {
-
+                
                 ZStack(alignment: .topLeading) {
                     if (survey.survey_title ?? "").isEmpty {
                         Text("Enter Your Survey Title")
@@ -162,7 +163,7 @@ struct SurveyView: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 20)
                     }
-
+                    
                     TextEditor(text: $tempTitle)
                         .font(.title)
                         .fontWeight(.semibold)
@@ -170,14 +171,14 @@ struct SurveyView: View {
                         .onChange(of: tempTitle) { newValue in
                             survey.survey_title = newValue
                         }
-
+                    
                 }
                 .frame(minHeight: 40, maxHeight: 120)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.gray.opacity(0.3))
                 )
-
+                
                 ZStack(alignment: .topLeading) {
                     if (survey.survey_description
                         ?? "What is your survey about?").isEmpty
@@ -191,7 +192,7 @@ struct SurveyView: View {
                         text: Binding(
                             get: {
                                 survey.survey_description
-                                    ?? "What is your survey about?"
+                                ?? "What is your survey about?"
                             },
                             set: { survey.survey_description = $0 }
                         )
@@ -206,7 +207,7 @@ struct SurveyView: View {
                 )
             }
             .padding(.horizontal)
-
+            
             // QUESTION LIST
             VStack(spacing: 12) {
                 ForEach(vm.questions) { question in
@@ -222,26 +223,26 @@ struct SurveyView: View {
             }
             .padding(.horizontal)
             .padding(.bottom, 40)
-
+            
         }
     }
-
+    
     // MARK: Responses Tab Content
     //    private func responses(for question: Question) -> [DResponse] {
     //        vm.responses.filter { $0.in_question == question }
     //    }
-
+    
     private var responsesTabContent: some View {
         ScrollView {
             VStack(spacing: 20) {
-
+                
                 ForEach(vm.questions) { question in
                     ResponseRendered(
                         question: question,
                         responses: vm.responsesFor(question)
                     )
                 }
-
+                
             }
             .padding(.vertical)
         }
@@ -249,7 +250,7 @@ struct SurveyView: View {
             vm.fetchResponses()  // pastikan selalu refresh
         }
     }
-
+    
     // MARK: Sticky Bottom Bar
     private var bottomStickyBar: some View {
         VStack(spacing: 0) {
@@ -259,9 +260,14 @@ struct SurveyView: View {
                     NavigationLink(
                         destination: FinishingSurveyView(
                             vm: vm,
+                            onCompletion: {
+                                // When 'Save' or 'Publish' is pressed and successful
+                                flowDismiss() // Dismiss the whole survey creation flow
+                            },
                             survey: survey,
                             questions: vm.questions
                         )
+                        
                     ) {
                         Text("Next")
                             .fontWeight(.bold)
@@ -274,9 +280,9 @@ struct SurveyView: View {
                     .padding(.trailing, 30)
                     .padding(.bottom, 20)
                 }
-
+                
                 HStack {
-
+                    
                     Button(action: {
                         vm.addQuestion(type: .shortAnswer)
                     }) {
@@ -289,21 +295,21 @@ struct SurveyView: View {
                             .cornerRadius(15)
                             .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                     }
-
+                    
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
                 //                .padding(.bottom, 30)
                 //                .background(Color.white)
                 //                .shadow(radius: 10)
-
+                
             } else {
                 HStack {
                     // Cek apakah survei masih publik (aktif)
                     if survey.is_public {
                         let responseCount = survey.has_hresponse?.count ?? 0
                         let canFinish = responseCount > 0
-
+                        
                         Button(action: {
                             showFinishAlert = true
                         }) {
@@ -321,8 +327,8 @@ struct SurveyView: View {
                                 )
                         }
                         .disabled(!canFinish)  // Matikan tombol jika 0 response
-
-
+                        
+                        
                     } else {
                         // Jika sudah finish/close (opsional)
                         Text("Survey Closed")
@@ -337,7 +343,7 @@ struct SurveyView: View {
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
             }
-
+            
         }
         .padding(.bottom, 30)
         .background(Color.white)
