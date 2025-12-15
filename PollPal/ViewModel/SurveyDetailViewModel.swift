@@ -11,6 +11,10 @@ import Foundation
 class SurveyDetailViewModel: ObservableObject {
     let survey: Survey
 
+    @Published var errorMessage: String = ""
+    @Published var showError: Bool = false
+    @Published var canNavigate: Bool = false
+
     init(survey: Survey) {
         self.survey = survey
     }
@@ -40,11 +44,11 @@ class SurveyDetailViewModel: ObservableObject {
         }
         return []
     }
-    
+
     var deadlineString: String {
         guard let date = survey.survey_deadline else { return "No Deadline" }
         let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM yyyy" // Contoh: 12 Dec 2025
+        formatter.dateFormat = "d MMM yyyy"  // Contoh: 12 Dec 2025
         return formatter.string(from: date)
     }
 
@@ -56,4 +60,32 @@ class SurveyDetailViewModel: ObservableObject {
     var hasDeadline: Bool {
         return survey.survey_deadline != nil
     }
+
+    // MARK: - VALIDASI START SURVEY (PENTING!)
+    // Fungsi ini dipanggil saat tombol "Start Survey" ditekan
+    func validateAndStart() {
+        // 1. Cek Deadline lagi (Real-time)
+        if isExpired {
+            self.errorMessage = "Sorry, survey is no longer opened."
+            self.showError = true
+            return
+        }
+
+        // 2. Cek Kuota (Real-time Refresh)
+        // Kita paksa Core Data refresh object ini untuk dapat data terbaru dari database
+        survey.managedObjectContext?.refresh(survey, mergeChanges: true)
+
+        let currentCount = survey.has_hresponse?.count ?? 0
+        let target = Int(survey.survey_target_responden)
+
+        if currentCount >= target {
+            self.errorMessage = "Sorry, survey limits has been reached."
+            self.showError = true
+            return
+        }
+
+        // 3. Jika Lolos Semua, izinkan navigasi
+        self.canNavigate = true
+    }
+
 }

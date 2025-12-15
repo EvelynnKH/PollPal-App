@@ -104,7 +104,20 @@ struct AllSurveyCreatorView: View {
             }
         }.navigationDestination(isPresented: $showSurveyDetail) {
             if let survey = selectedSurvey {
-                SurveyView(mode: "edit", survey: survey, context: context)
+                if survey.is_public == true {
+                    SurveyView(
+                        mode: "published",
+                        survey: survey,
+                        context: context
+                    )
+                }
+                else {
+                    SurveyView(
+                        mode: "edit",
+                        survey: survey,
+                        context: context
+                    )
+                }
             }
         }
 
@@ -217,21 +230,23 @@ struct SurveyCardView: View {
                         .background(Capsule().fill(Color(hex: "1F3A45")))
                 }
             }
+            
+            if status != "Draft" {
+                HStack {
+                    Text("\(responseCount) Response")
+                        .font(.caption)
+                        .foregroundColor(.green)
 
-            HStack {
-                Text("\(responseCount) Response")
-                    .font(.caption)
-                    .foregroundColor(.green)
+                    Spacer()
 
-                Spacer()
-
-                Button(action: onViewMore) {
-                    Text(actionText)
-                        .font(.headline)
-                        .foregroundColor(isDisabled ? .gray : .orange)
-                        .underline()
+                    Button(action: onViewMore) {
+                        Text(actionText)
+                            .font(.headline)
+                            .foregroundColor(isDisabled ? .gray : .orange)
+                            .underline()
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding()

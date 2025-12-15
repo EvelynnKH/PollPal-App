@@ -23,17 +23,17 @@ enum QuestionType: String, CaseIterable, Identifiable {
     var pointCost: Int {
         switch self {
         case .shortAnswer:
-            return 12
-        case .paragraph:
             return 20
+        case .paragraph:
+            return 40
         case .multipleChoice:
             return 10  // pilgan
         case .checkboxes:
             return 15  // bisa multi pilihan
         case .dropdown:
-            return 12
+            return 10
         case .linearscale:
-            return 12
+            return 15
         }
     }
 }
