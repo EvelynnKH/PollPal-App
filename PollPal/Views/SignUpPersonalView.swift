@@ -98,12 +98,12 @@ struct SignUpPersonalView: View {
                         Menu {
                             ForEach(indonesianProvinces, id: \.self) { province in
                                 Button(action: {
-                                    viewModel.placeOfBirth = province
+                                    viewModel.placeOfResidence = province
                                 }) {
                                     HStack {
                                         Text(province)
                                         // Tampilkan centang jika dipilih
-                                        if viewModel.placeOfBirth == province {
+                                        if viewModel.placeOfResidence == province {
                                             Image(systemName: "checkmark")
                                         }
                                     }

@@ -204,4 +204,41 @@ class DashboardCreatorViewModel: ObservableObject {
         self.allSurveys = total
     }
     
+    func autoCheckFinishedSurveys() {
+        guard let user = self.user else { return }
+
+        let req: NSFetchRequest<Survey> = Survey.fetchRequest()
+        req.predicate = NSPredicate(
+            format: "is_public == YES AND survey_status_del == NO AND owned_by_user == %@",
+            user
+        )
+
+        do {
+            let surveys = try context.fetch(req)
+
+            for survey in surveys {
+                let responseReq: NSFetchRequest<HResponse> = HResponse.fetchRequest()
+                responseReq.predicate = NSPredicate(
+                    format: "in_survey == %@",
+                    survey
+                )
+
+                let responses = try context.fetch(responseReq)
+                let uniqueUsers = Set(responses.compactMap { $0.is_filled_by_user })
+                let responseCount = uniqueUsers.count
+
+                // 🔑 BANDINKAN DENGAN TARGET
+                if responseCount >= Int(survey.survey_target_responden) {
+                    survey.survey_status_del = true   // tandai selesai
+                    print("✅ Survey finished:", survey.survey_title ?? "")
+                }
+            }
+
+            try context.save()
+        } catch {
+            print("❌ autoCheckFinishedSurveys error:", error)
+        }
+    }
+
+    
 }

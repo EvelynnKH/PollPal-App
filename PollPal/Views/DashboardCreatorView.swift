@@ -143,6 +143,7 @@ struct DashboardCreatorView: View {
         .onAppear {
             // Ini akan memastikan data poin dan metrik lainnya
             // dimuat ulang setiap kali view ini muncul kembali
+            vm.autoCheckFinishedSurveys()
             vm.refetchData()
         }
         .navigationDestination(isPresented: $shouldNavigateToAllSurveys) {

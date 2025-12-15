@@ -46,10 +46,9 @@ class SignUpViewModel: ObservableObject {
     func validateStep1() {
         // 1. Cek apakah ada field text yang kosong (atau hanya spasi)
         if fullName.trimmingCharacters(in: .whitespaces).isEmpty ||
-           placeOfBirth.trimmingCharacters(in: .whitespaces).isEmpty ||
            placeOfResidence.trimmingCharacters(in: .whitespaces).isEmpty {
             
-            showError(msg: "Please fill in all personal details (Name, Birth Place, Residence).")
+            showError(msg: "Please fill in all personal details (Name and Birth Place).")
             return
         }
         
@@ -136,7 +135,6 @@ class SignUpViewModel: ObservableObject {
          newUser.user_hp = phoneNumber
          newUser.user_birthdate = birthDate
          newUser.user_birthplace = placeOfBirth
-         newUser.user_residence = placeOfResidence
          newUser.user_gender = gender
         
         // Data dari Step 2
