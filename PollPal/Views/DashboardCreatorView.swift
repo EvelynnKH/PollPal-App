@@ -37,7 +37,7 @@ struct DashboardCreatorView: View {
                         number: "\(vm.totalResponses)",
                         label: "Responses"
                     )
-
+                    
                     // 2. All Surveys - REMOVED NavigationLink, using onMoreTap closure
                     StatCardView(
                         number: "\(vm.allSurveys)",
@@ -48,7 +48,7 @@ struct DashboardCreatorView: View {
                             self.shouldNavigateToAllSurveys = true
                         }
                     )
-
+                    
                     // 3. Points - REMOVED NavigationLink, using onMoreTap closure
                     StatCardView(
                         number: "\(vm.points)",
@@ -90,7 +90,6 @@ struct DashboardCreatorView: View {
                             tempSurvey = s
                         }
                     )
-                    ActionButton(icon: "bell", text: "Notifications (23)")
                 }
                 // MARK: - ACTIVE SURVEYS
                 Text("Active Surveys")
@@ -141,20 +140,25 @@ struct DashboardCreatorView: View {
             }
             .padding(.horizontal)
         }
+        .onAppear {
+            // Ini akan memastikan data poin dan metrik lainnya
+            // dimuat ulang setiap kali view ini muncul kembali
+            vm.refetchData()
+        }
         .navigationDestination(isPresented: $shouldNavigateToAllSurveys) {
-                AllSurveyCreatorView(
-                    context: viewContext,
-                    currentUser: vm.user!
-                )
-            }
-            
-            // 2. Programmatic Navigation for Points (The one that works)
-            .navigationDestination(isPresented: $shouldNavigateToPoints) {
-                ViewPointView()
-            }
-
+            AllSurveyCreatorView(
+                context: viewContext,
+                currentUser: vm.user!
+            )
+        }
+        
+        // 2. Programmatic Navigation for Points (The one that works)
+        .navigationDestination(isPresented: $shouldNavigateToPoints) {
+            ViewPointView()
+        }
+        
     }
-
+    
 }
 // MARK: - COMPONENTS
 //

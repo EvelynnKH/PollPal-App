@@ -263,7 +263,7 @@ struct DataSeeder {
         let trans2 = Transaction(context: viewContext)
         trans2.transaction_id = UUID()
         trans2.transaction_point_change = 50
-        trans2.transaction_description = "Reward for filling in Survey: Kepuasan Customer"
+        trans2.transaction_description = "Reward Survey: Kepuasan Customer"
         trans2.transaction_status_del = false
         trans2.owned_by_user = felicia
         trans2.in_survey = survey1

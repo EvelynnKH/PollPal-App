@@ -40,7 +40,7 @@ struct TopUpPoint: View {
                 // MARK: Amount Card
                 VStack(alignment: .leading, spacing: 16) {
                     
-                    Text("Amount")
+                    Text("PollPal Points")
                         .font(.headline)
                         .foregroundColor(.darkTeal)
                     
