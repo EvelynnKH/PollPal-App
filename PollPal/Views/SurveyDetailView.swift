@@ -25,11 +25,20 @@ struct SurveyDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Header Image (Placeholder)
-            Image("mountain")
-                .resizable()
-                .scaledToFill()
-                .frame(height: 200)
-                .clipped()
+            if let path = viewModel.survey.survey_img_url {
+                // ✅ Pakai UniversalImage di sini
+                UniversalImage(imageName: path)
+                    .scaledToFill()
+                    .frame(height: 200)
+                    .clipped()
+            } else {
+                // Jika tidak ada URL sama sekali, background putih
+                Image("mountain")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 200)
+                    .clipped()
+            }
 
             VStack(alignment: .leading, spacing: 20) {
                 // Points Badge

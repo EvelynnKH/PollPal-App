@@ -52,7 +52,7 @@ extension DashboardRView {
             Text("Hello, \(viewModel.userName)")
                 .font(.largeTitle)
                 .fontWeight(.bold)
-                .foregroundColor(.black)
+                .foregroundColor(Color(hex: "#003F57"))
                 .padding(.top)
             Spacer()
         }
@@ -176,11 +176,11 @@ extension DashboardRView {
         .padding(.vertical)
     }
     
-    // 7. Baris Popular Survey
     private var popularSurveysRow: some View {
         VStack {
+            // Header
             HStack {
-                Text("Popular Survey")
+                Text("Active Survey")
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundStyle(Color(hex: "#0C4254"))
@@ -188,90 +188,84 @@ extension DashboardRView {
                 Spacer()
             }
             
+            // Horizontal Scroll
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(viewModel.popularSurveys, id: \.self) { survey in
                         NavigationLink(destination: SurveyDetailView(survey: survey)) {
-                            ZStack {
-
-                                // MARK: - BACKGROUND IMAGE (LOCAL FILE)
-                                if let path = survey.survey_img_url {
-                                    let fileURL = URL(fileURLWithPath: path)
-
-                                    if let uiImage = UIImage(contentsOfFile: fileURL.path) {
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 240, height: 130)
-                                            .clipped()
-                                    } else {
-                                        Color.white
-                                    }
-                                }
-
-                                // MARK: - DIM OVERLAY (OVER IMAGE)
-                                if survey.survey_img_url != nil {
-                                    Color.black.opacity(0.45)
-                                }
-
-                                // MARK: - CONTENT
-                                HStack(spacing: 10) {
-                                    VStack(alignment: .leading, spacing: 8) {
-
-                                        Text(survey.survey_title ?? "No Title")
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(
-                                                survey.survey_img_url != nil ? .white : Color(hex: "#003F57")
-                                            )
-                                            .lineLimit(2)
-                                            .frame(height: 36, alignment: .topLeading)
-
-                                        Spacer()
-
-                                        HStack(spacing: 6) {
-                                            Image(systemName: "gift.fill")
-                                                .font(.caption)
-                                                .foregroundColor(Color(hex: "#FF9F1C"))
-
-                                            Text("\(survey.survey_rewards_points) pts")
-                                                .font(.caption)
-                                                .fontWeight(.medium)
-                                                .foregroundColor(
-                                                    survey.survey_img_url != nil ? .white : Color(hex: "#003F57")
-                                                )
-                                        }
-                                    }
-
-                                    Spacer()
-                                }
-                                .padding(14)
-                            }
-                            .frame(width: 240, height: 130)
-                            .cornerRadius(16)
-                            .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 6)
+                            // Memanggil Subview Card
+                            PopularSurveyCard(survey: survey)
                         }
-
-
                     }
                 }
                 .padding(.horizontal)
+                .padding(.vertical, 10) // Tambah padding biar shadow ga kepotong
             }
         }
     }
-    
-    @ViewBuilder
-    private func surveyBackgroundImage(for survey: Survey) -> some View {
-        if let path = survey.survey_img_url {
-            let fileURL = URL(fileURLWithPath: path)
 
-            if let uiImage = UIImage(contentsOfFile: fileURL.path) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
+    // MARK: - COMPONENT CARD (Refactored)
+    struct PopularSurveyCard: View {
+        let survey: Survey
+        
+        // Helper simple untuk cek apakah ada URL gambar
+        var hasImage: Bool {
+            return survey.survey_img_url != nil
+        }
+        
+        var body: some View {
+            ZStack {
+                // LAYER 1: BACKGROUND (Logic Universal Image)
+                if let path = survey.survey_img_url {
+                    // ✅ Pakai UniversalImage di sini
+                    UniversalImage(imageName: path)
+                        .scaledToFill() // Agar gambar memenuhi kotak
+                        .frame(width: 240, height: 130) // Paksa ukuran frame di sini juga untuk gambar
+                        .clipped()
+                } else {
+                    // Jika tidak ada URL sama sekali, background putih
+                    Color.white
+                }
+                
+                // LAYER 2: DIMMED OVERLAY (Hanya jika ada URL gambar)
+                if hasImage {
+                    Color.black.opacity(0.45)
+                }
+                
+                // LAYER 3: CONTENT TEXT
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(survey.survey_title ?? "No Title")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        // Logic Warna Text: Putih kalau ada gambar, Biru kalau polosan
+                        .foregroundColor(hasImage ? .white : Color(hex: "#003F57"))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                    
+                    Spacer()
+                    
+                    // BARU: Reward Points Badge
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                        Text("+\(survey.survey_rewards_points ?? 0) pts")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                    }
+                    .foregroundColor(hasImage ? .white : Color(hex: "#FE982A"))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: "FE982A").opacity(0.1))
+                    .cornerRadius(8)
+                }
+                .padding(14)
             }
+            // MARK: - CONTAINER STYLING
+            .frame(width: 240, height: 130)
+            .background(Color.white) // Fallback background agar shadow tetap muncul walau image loading
+            .clipShape(RoundedRectangle(cornerRadius: 16)) // Potong sudut tumpul
+            .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
         }
     }
 
