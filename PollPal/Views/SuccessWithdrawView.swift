@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct SuccessWithdrawView: View {
-    @Environment(\.dismiss) var dismiss  // 
+    @Environment(\.dismiss) var dismiss  //
+    var pointsDeducted: Int32
     var body: some View {
         ZStack {
             VStack(spacing: 30) {
@@ -33,10 +34,15 @@ struct SuccessWithdrawView: View {
                 
                 // Success Text
                 VStack(spacing: 10) {
-                    Text("Withdraw Successful")
+                    Text("Withdraw Successful !")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(Color.darkTeal)
+                    
+                    Text("- \(pointsDeducted.formattedWithSeparator()) Points")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color.brandOrange)
+                        .padding(.bottom, 10)
                     
                     Text("The balance will be transfer to your wallet")
                         .font(.subheadline)
@@ -68,5 +74,5 @@ struct SuccessWithdrawView: View {
 }
 
 #Preview {
-    SuccessWithdrawView()
+    SuccessWithdrawView(pointsDeducted: 1000)
 }

@@ -175,7 +175,8 @@ struct WithdrawPoint: View {
                         Button("OK", role: .cancel) {}
                     }
                     .navigationDestination(isPresented: $navigateToSuccess) {
-                        SuccessWithdrawView()
+                        // Cast Double to Int32 here
+                        SuccessWithdrawView(pointsDeducted: Int32(selectedAmount))
                             .navigationBarBackButtonHidden(true)
                     }
                 }

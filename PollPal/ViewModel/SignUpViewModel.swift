@@ -134,7 +134,7 @@ class SignUpViewModel: ObservableObject {
 //         Pastikan CoreData entity Anda memiliki atribut ini jika ingin disimpan:
          newUser.user_hp = phoneNumber
          newUser.user_birthdate = birthDate
-         newUser.user_birthplace = placeOfBirth
+         newUser.user_residence = placeOfResidence
          newUser.user_gender = gender
         
         // Data dari Step 2
