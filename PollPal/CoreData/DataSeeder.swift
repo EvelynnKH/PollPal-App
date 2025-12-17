@@ -59,7 +59,7 @@ struct DataSeeder {
         felicia.user_pwd = "feli#123"
         felicia.user_point = 2000  // Cukup untuk redeem
         felicia.user_gender = "Female"
-        felicia.user_birthplace = "Surabaya"
+        felicia.user_residence = "Jawa Timur"
         felicia.user_birthdate = calendar.date(
             byAdding: .year,
             value: -20,
@@ -83,7 +83,7 @@ struct DataSeeder {
         budi.user_pwd = "budi#123"
         budi.user_point = 5000  // Cukup untuk post banyak survey
         budi.user_gender = "Male"
-        budi.user_birthplace = "Jakarta"
+        budi.user_residence = "Aceh"
         budi.user_birthdate = calendar.date(
             byAdding: .year,
             value: -25,
@@ -103,7 +103,7 @@ struct DataSeeder {
         evelin.user_pwd = "evelin#123"
         evelin.user_point = 1500  // Modal awal
         evelin.user_gender = "Female"
-        evelin.user_birthplace = "Bandung"
+        evelin.user_residence = "Jawa Barat"
         evelin.user_birthdate = calendar.date(
             byAdding: .year,
             value: -19,
@@ -123,7 +123,7 @@ struct DataSeeder {
         andi.user_pwd = "andi#123"
         andi.user_point = 500  // Poin dikit (New User)
         andi.user_gender = "Male"
-        andi.user_birthplace = "Surabaya"
+        andi.user_residence = "Bali"
         andi.user_birthdate = calendar.date(
             byAdding: .year,
             value: -22,
@@ -150,8 +150,7 @@ struct DataSeeder {
             loc: "All",
             minAge: 18,
             maxAge: 30,
-            categories: [catTech],
-            img: "survey_ai_illustration"
+            categories: [catTech]
         )
         let q1 = addQuestion(
             ctx: viewContext,
@@ -182,11 +181,10 @@ struct DataSeeder {
             quota: 50,
             deadline: nextWeek,
             gender: "All",
-            loc: "Surabaya",
+            loc: "Jawa Timur",
             minAge: 15,
             maxAge: 30,
-            categories: [catHealth],
-            img: "survey_sleep"
+            categories: [catHealth]
         )
         addQuestion(
             ctx: viewContext,
@@ -206,11 +204,10 @@ struct DataSeeder {
             quota: 200,
             deadline: nextMonth,
             gender: "All",
-            loc: "UC Apartment",
+            loc: "All",
             minAge: 17,
             maxAge: 30,
-            categories: [catDaily, catFood],
-            img: "survey_food"
+            categories: [catDaily, catFood]
         )
         addQuestion(
             ctx: viewContext,
@@ -230,11 +227,10 @@ struct DataSeeder {
             quota: 50,
             deadline: nextWeek,
             gender: "Male",
-            loc: "Jakarta",
+            loc: "Jawa Barat",
             minAge: 18,
             maxAge: 30,
-            categories: [catGaming],
-            img: "survey_ai_illustration"
+            categories: [catGaming]
         )
 
         // SCENARIO 5: EXPIRED (Tidak boleh muncul)
@@ -250,8 +246,7 @@ struct DataSeeder {
             loc: "All",
             minAge: 10,
             maxAge: 60,
-            categories: [catDaily],
-            img: "survey_office"
+            categories: [catDaily]
         )
 
         // SCENARIO 6: QUOTA FULL (Tidak boleh muncul)
@@ -268,8 +263,7 @@ struct DataSeeder {
             loc: "All",
             minAge: 10,
             maxAge: 60,
-            categories: [catDaily],
-            img: "survey_office"
+            categories: [catDaily]
         )
         // Buat Andi mengisi survey ini agar kuota penuh
         fillSurvey(ctx: viewContext, survey: surveyFull, user: andi)
@@ -289,8 +283,7 @@ struct DataSeeder {
             loc: "All",
             minAge: 18,
             maxAge: 55,
-            categories: [catDaily],
-            img: "survey_office"
+            categories: [catDaily]
         )
 
         // Q1: Multiple Choice
@@ -414,8 +407,7 @@ struct DataSeeder {
         loc: String,
         minAge: Int,
         maxAge: Int,
-        categories: [Category],
-        img: String
+        categories: [Category]
     ) -> Survey {
         let s = Survey(context: ctx)
         s.survey_id = UUID()
@@ -429,7 +421,6 @@ struct DataSeeder {
         s.survey_residence = loc
         s.survey_usia_min = Int32(minAge)
         s.survey_usia_max = Int32(maxAge)
-        s.survey_img_url = img
         s.is_public = true
         s.survey_status_del = false
         s.survey_created_at = Date()

@@ -8,46 +8,96 @@ struct QuestionEditorCard: View {
     @ObservedObject var vm: SurveyViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-
-                // MARK: - Title (safeText)
-                TextField(
-                    "Judul Pertanyaan",
-                    text: Binding(
+        VStack(alignment: .leading, spacing: 0) { // Spacing 0 agar Header menempel rapi ke atas
+            
+            // MARK: - 1. HEADER AREA (Judul & Delete)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Question Title")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    TextField("Write your question...", text: Binding(
                         get: { question.safeText },
                         set: { question.safeText = $0 }
-                    )
-                )
-                .font(.system(size: 20, weight: .semibold))
+                    ))
+                    .font(.system(size: 18, weight: .semibold))
+                }
+                
                 Spacer()
-
+                
                 Button {
                     vm.deleteQuestion(question)
                 } label: {
-                    Image(systemName: "trash")
-                        .foregroundColor(.red)
+                    Image(systemName: "trash.fill") // Pakai .fill biar lebih solid
+                        .font(.subheadline)
+                        .foregroundColor(.red.opacity(0.8))
+                        .padding(8)
+                        .background(Color.red.opacity(0.1)) // Background tombol biar jelas area sentuhnya
+                        .clipShape(Circle())
                 }
             }
-            // MARK: - Sections
-            typePickerSection
-            optionsEditorSection
-            previewSection
-
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.white)
-                        .shadow(
-                            color: Color.black.opacity(0.1),
-                            radius: 5,
-                            y: 2
-                        )
-                )
-                .onDisappear {
-                    try? context.save()
+            .padding(16) // Padding khusus header
+            .background(Color(hex: "#F4F6F8")) // Warna header sedikit abu/biru muda (beda dari body)
+            
+            Divider() // Garis pemisah tegas
+            
+            // MARK: - 2. CONTENT BODY
+            VStack(alignment: .leading, spacing: 20) {
+                
+                // Section: Tipe & Opsi
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Question Type")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                    
+                    typePickerSection
+                    optionsEditorSection
                 }
+                
+                Divider()
+                    .padding(.horizontal, -16) // Hack biar divider mentok kiri-kanan
+                
+                // Section: Preview
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "eye")
+                            .font(.caption)
+                        Text("Preview")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.secondary)
+                    
+                    previewSection
+                        .padding()
+                        .background(Color.gray.opacity(0.05)) // Preview dikasih kotak tipis sendiri
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                }
+            }
+            .padding(16) // Padding body
+            
         }
+        // MARK: - 3. CONTAINER CARD STYLE
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4) // Shadow lebih soft
+        .overlay(
+            // Opsional: Border tipis biar makin rapi
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+        )// Jarak kiri kanan dari layar
+        .padding(.bottom, 16) // Jarak antar kartu
+        .onDisappear {
+            try? context.save()
+        }
+        
     }
 
     // --------------------------
@@ -120,7 +170,7 @@ struct QuestionEditorCard: View {
                 || qtype == .dropdown
             {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Opsi Jawaban:")
+                    Text("Option:")
                         .font(.subheadline)
                         .fontWeight(.bold)
 
@@ -129,7 +179,7 @@ struct QuestionEditorCard: View {
                         HStack {
                             // edit option text directly on the Option object
                             TextField(
-                                "Isi opsi...",
+                                "Fill in your option(s)",
                                 text: Binding(
                                     get: { option.option_text ?? "" },
                                     set: { newText in
@@ -160,7 +210,7 @@ struct QuestionEditorCard: View {
                         )
                         try? context.save()
                     } label: {
-                        Label("Tambah Opsi", systemImage: "plus.circle.fill")
+                        Label("Add more option", systemImage: "plus.circle.fill")
                             .foregroundColor(.blue)
                     }
                     .padding(.top, 4)
@@ -174,11 +224,7 @@ struct QuestionEditorCard: View {
     // --------------------------
     private var previewSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Preview:")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-
-            // create a temporary response for preview (creator mode)
+// create a temporary response for preview (creator mode)
             let tempResponse = DResponse(context: context)
             // note: do NOT save tempResponse here (preview only)
 
