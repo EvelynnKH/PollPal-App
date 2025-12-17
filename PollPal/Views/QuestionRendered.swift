@@ -12,6 +12,11 @@ struct QuestionRenderer: View {
     var isPreview: Bool = false  // <–– added safely, tidak ubah var lain
 
     @Environment(\.managedObjectContext) private var context
+    
+    // Colors
+    let darkTeal = Color(hex: "0C4254")
+    let brandOrange = Color(hex: "FE982A")
+    let lightGray = Color.gray.opacity(0.1)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -216,32 +221,74 @@ struct QuestionRenderer: View {
                 
                 
             case .linearscale:
-                VStack(alignment: .leading, spacing: 12) {
+//                VStack(alignment: .leading, spacing: 12) {
+//
+//                    let range = 1...5  // bisa kamu ganti ke 1...10
+//                    let value = Binding<Double>(
+//                        get: {
+//                            Double(response.dresponse_answer_text ?? "") ?? 0
+//                        },
+//                        set: { newVal in
+//                            if !isPreview {
+//                                response.dresponse_answer_text =
+//                                    "\(Int(newVal))"
+//                            }
+//                        }
+//                    )
+//
+//                    Text("Choose a value:")
+//                    Slider(
+//                        value: value,
+//                        in: Double(range.lowerBound)...Double(range.upperBound),
+//                        step: 1
+//                    )
+//                    .disabled(isPreview)
+//
+//                    Text("Selected: \(Int(value.wrappedValue))")
+//                        .foregroundColor(.gray)
+//                }
+                let options =
+                    (question.has_option as? Set<Option>)?
+                    .sorted {
+                        ($0.option_text ?? "") < ($1.option_text ?? "")
+                    } ?? []
 
-                    let range = 1...5  // bisa kamu ganti ke 1...10
-                    let value = Binding<Double>(
-                        get: {
-                            Double(response.dresponse_answer_text ?? "") ?? 0
-                        },
-                        set: { newVal in
-                            if !isPreview {
-                                response.dresponse_answer_text =
-                                    "\(Int(newVal))"
+                // Urutkan opsi berdasarkan angka (bukan string)
+                    let scaleOptions = options.sorted {
+                        (Int($0.option_text ?? "0") ?? 0)
+                        < (Int($1.option_text ?? "0") ?? 0)
+                    }
+
+                    HStack(spacing: 12) {
+                        if scaleOptions.isEmpty {
+                            Text("No scale options available")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        } else {
+                            ForEach(scaleOptions, id: \.option_id) { option in
+                                VStack(spacing: 8) {
+                                    ZStack {
+                                        Circle()
+                                            .stroke(
+                                                Color.gray.opacity(0.4),
+                                                lineWidth: 2
+                                            )
+                                            .background(
+                                                Circle().fill(Color.white)
+                                            )
+                                            .frame(width: 44, height: 44)
+
+                                        Text(option.option_text ?? "?")
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(darkTeal)
+                                    }
+                                }
                             }
                         }
-                    )
-
-                    Text("Choose a value:")
-                    Slider(
-                        value: value,
-                        in: Double(range.lowerBound)...Double(range.upperBound),
-                        step: 1
-                    )
-                    .disabled(isPreview)
-
-                    Text("Selected: \(Int(value.wrappedValue))")
-                        .foregroundColor(.gray)
-                }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
 
             }
         }

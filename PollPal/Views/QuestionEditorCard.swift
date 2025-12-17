@@ -1,40 +1,52 @@
-import SwiftUI
 import CoreData
+import SwiftUI
 
 struct QuestionEditorCard: View {
-    @ObservedObject var question: Question          // Core Data object
+    @ObservedObject var question: Question  // Core Data object
     @Binding var qtype: QuestionType
     @Environment(\.managedObjectContext) private var context
     @ObservedObject var vm: SurveyViewModel
-    
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            HStack {
 
-            // MARK: - Title (safeText)
-            TextField(
-                "Judul Pertanyaan",
-                text: Binding(
-                    get: { question.safeText },
-                    set: { question.safeText = $0 }
+                // MARK: - Title (safeText)
+                TextField(
+                    "Judul Pertanyaan",
+                    text: Binding(
+                        get: { question.safeText },
+                        set: { question.safeText = $0 }
+                    )
                 )
-            )
-            .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
+                Spacer()
 
-
+                Button {
+                    vm.deleteQuestion(question)
+                } label: {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+            }
             // MARK: - Sections
             typePickerSection
             optionsEditorSection
             previewSection
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 5, y: 2)
-        )
-        .onDisappear {
-            try? context.save()
+
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.white)
+                        .shadow(
+                            color: Color.black.opacity(0.1),
+                            radius: 5,
+                            y: 2
+                        )
+                )
+                .onDisappear {
+                    try? context.save()
+                }
         }
     }
 
@@ -42,69 +54,71 @@ struct QuestionEditorCard: View {
     // Type picker section
     // --------------------------
     private var typePickerSection: some View {
-            HStack {
-                Text(qtype.title)
-                    .font(.system(size: 14, weight: .medium))
-                
-                Spacer()
-                
-                Menu {
-                    ForEach(QuestionType.allCases, id: \.rawValue) { type in
-                        Button(type.title) {
-                            // PANGGIL FUNGSI LOGIC DISINI
-                            changeQuestionType(to: type)
-                        }
+        HStack {
+            Text(qtype.title)
+                .font(.system(size: 14, weight: .medium))
+
+            Spacer()
+
+            Menu {
+                ForEach(QuestionType.allCases, id: \.rawValue) { type in
+                    Button(type.title) {
+                        // PANGGIL FUNGSI LOGIC DISINI
+                        changeQuestionType(to: type)
                     }
-                } label: {
-                    Label("Type", systemImage: "chevron.down")
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 12)
-                        .foregroundColor(.white)
-                        .background(Capsule().fill(Color.themeOrange))
                 }
+            } label: {
+                Label("Type", systemImage: "chevron.down")
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .foregroundColor(.white)
+                    .background(Capsule().fill(Color.themeOrange))
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
         }
-    
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
+    }
+
     private func changeQuestionType(to type: QuestionType) {
-            // 1. Ubah Tipe di UI Binding & Core Data Object
-            qtype = type
-            question.safeType = type
-            
-            // 2. LOGIKA KHUSUS: LINEAR SCALE
-            // Jika user pilih Linear Scale, otomatis buat opsi 1-5 jika belum ada
-            if type == .linearscale {
-                let currentCount = question.optionsArray.count
-                if currentCount == 0 {
-                    for i in 1...5 {
-                        let opt = Option(context: context)
-                        opt.option_id = UUID()
-                        opt.option_text = "\(i)"
-                        question.addToHas_option(opt) // Link ke question
-                    }
-                    try? context.save()
+        // 1. Ubah Tipe di UI Binding & Core Data Object
+        qtype = type
+        question.safeType = type
+
+        // 2. LOGIKA KHUSUS: LINEAR SCALE
+        // Jika user pilih Linear Scale, otomatis buat opsi 1-5 jika belum ada
+        if type == .linearscale {
+            let currentCount = question.optionsArray.count
+            if currentCount == 0 {
+                for i in 1...5 {
+                    let opt = Option(context: context)
+                    opt.option_id = UUID()
+                    opt.option_text = "\(i)"
+                    question.addToHas_option(opt)  // Link ke question
                 }
-            }
-            
-            // 3. LOGIKA KHUSUS: MULTIPLE CHOICE dkk (Opsional)
-            // Tambah 1 opsi kosong jika user pilih PG tapi belum ada opsi
-            else if [.multipleChoice, .checkboxes, .dropdown].contains(type) {
-                if question.optionsArray.isEmpty {
-                    question.addOption(text: "Option 1", context: context)
-                    try? context.save()
-                }
+                try? context.save()
             }
         }
+
+        // 3. LOGIKA KHUSUS: MULTIPLE CHOICE dkk (Opsional)
+        // Tambah 1 opsi kosong jika user pilih PG tapi belum ada opsi
+        else if [.multipleChoice, .checkboxes, .dropdown].contains(type) {
+            if question.optionsArray.isEmpty {
+                question.addOption(text: "Option 1", context: context)
+                try? context.save()
+            }
+        }
+    }
 
     // --------------------------
     // Options editor (relationship-based)
     // --------------------------
     private var optionsEditorSection: some View {
         Group {
-            if qtype == .multipleChoice || qtype == .checkboxes || qtype == .dropdown {
+            if qtype == .multipleChoice || qtype == .checkboxes
+                || qtype == .dropdown
+            {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Opsi Jawaban:")
                         .font(.subheadline)
@@ -140,7 +154,10 @@ struct QuestionEditorCard: View {
                     // Add option button -> uses relation helper
                     Button {
                         let nextIndex = question.optionsArray.count + 1
-                        question.addOption(text: "Option \(nextIndex)", context: context)
+                        question.addOption(
+                            text: "Option \(nextIndex)",
+                            context: context
+                        )
                         try? context.save()
                     } label: {
                         Label("Tambah Opsi", systemImage: "plus.circle.fill")

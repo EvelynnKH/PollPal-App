@@ -434,6 +434,21 @@ class SurveyViewModel: ObservableObject {
         saveContext()
         objectWillChange.send()
     }
+    
+    func deleteQuestion(_ question: Question) {
+        context.delete(question)
+
+        if let index = questions.firstIndex(of: question) {
+            questions.remove(at: index)
+        }
+
+        do {
+            try context.save()
+        } catch {
+            print("❌ Failed to delete question:", error)
+        }
+    }
+
 
 }
 

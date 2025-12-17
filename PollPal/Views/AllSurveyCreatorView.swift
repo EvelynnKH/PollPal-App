@@ -231,7 +231,7 @@ struct SurveyCardView: View {
                 }
             }
             
-            if status != "Draft" {
+//            if status != "Draft" {
                 HStack {
                     Text("\(responseCount) Response")
                         .font(.caption)
@@ -247,7 +247,7 @@ struct SurveyCardView: View {
                     }
                     .buttonStyle(.plain)
                 }
-            }
+//            }
         }
         .padding()
         .background(

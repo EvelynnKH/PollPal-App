@@ -7,6 +7,15 @@ struct FinishingSurveyView: View {
     @ObservedObject var vm: SurveyViewModel
     @Environment(\.dismiss) var dismiss
 
+//    @Binding var navigateToDashboard: Bool
+
+//    var onFinishToDashboard: (() -> Void)?
+//    @Environment(\.dismiss) var dismiss
+
+    var onFinishToDashboard: (() -> Void)?   // ← ini lebih dulu
+//    var survey: Survey
+//    var questions: [Question]
+    
     // MARK: - Color theme
     let orange = Color(red: 254 / 255, green: 152 / 255, blue: 42 / 255)
     let DarkTeal = Color(red: 12 / 255, green: 66 / 255, blue: 84 / 255)
@@ -16,6 +25,18 @@ struct FinishingSurveyView: View {
     // MARK: - Incoming survey data
     var survey: Survey
     var questions: [Question]
+    
+    init(
+            vm: SurveyViewModel,
+            onFinishToDashboard: (() -> Void)? = nil,
+            survey: Survey,
+            questions: [Question]
+        ) {
+            self.vm = vm
+            self.onFinishToDashboard = onFinishToDashboard
+            self.survey = survey
+            self.questions = questions
+        }
 
     // MARK: - Category State
     @State private var categoryText: String = ""
@@ -44,6 +65,7 @@ struct FinishingSurveyView: View {
     @State private var showValidationError: Bool = false
     @State private var validationMessage: String = ""
 
+    
     let indonesianProvinces = [
         "All",
         "Aceh", "Sumatera Utara", "Sumatera Barat", "Riau", "Jambi",
@@ -304,6 +326,7 @@ struct FinishingSurveyView: View {
                     ? "Untitled Survey" : (survey.survey_title ?? "")
             )
             .font(.title)
+            .lineLimit(2)
             .fontWeight(.bold)
             .foregroundColor(.white)
 
@@ -590,9 +613,10 @@ struct FinishingSurveyView: View {
                     updateSurveyData()
                     vm.saveSurvey()
                     try? context.save()
-                    onCompletion?()
+//                    onCompletion?()
                     vm.reset()
-                    dismiss()
+                    onFinishToDashboard?() // balik ke Dashboard
+                    dismiss()              // tutup FinishingSurveyView
                 } else {
                     showValidationError = true  // Munculkan alert
                 }
@@ -607,8 +631,7 @@ struct FinishingSurveyView: View {
                     .cornerRadius(15)
             }
 
-            // PUBLISH
-            // PUBLISH
+            // PUBLISH BUTTON
             Button {
                 if isInputValid() {
                     // 1. Simpan data UI ke CoreData Object
@@ -628,9 +651,11 @@ struct FinishingSurveyView: View {
 
                         // NOTE: vm.recordSurveyCostTransaction sudah memanggil saveContext()
                         // dan memanggil refresh dashboard via closure.
-                        onCompletion?()
+//                        onCompletion?()
                         vm.reset()
+                        onFinishToDashboard?() // 🔥 balik ke Dashboard
                         dismiss()
+                        
                     } else {
                         // Jika GAGAL (karena poin tidak cukup atau user not found)
                         let userPoints = survey.owned_by_user?.user_point ?? 0
