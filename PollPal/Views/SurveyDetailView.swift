@@ -33,7 +33,7 @@ struct SurveyDetailView: View {
 
             VStack(alignment: .leading, spacing: 20) {
                 // Points Badge
-                Text("+\(viewModel.points) Points")
+                Text("+\(viewModel.reward_points) Points")
                     .font(.subheadline.bold())
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
