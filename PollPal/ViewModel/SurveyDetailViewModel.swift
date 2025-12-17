@@ -24,7 +24,7 @@ class SurveyDetailViewModel: ObservableObject {
     var description: String {
         survey.survey_description ?? "No description available."
     }
-    var points: Int { Int(survey.survey_points) }
+    var reward_points: Int { Int(survey.survey_rewards_points) }
 
     // Menghitung jumlah pertanyaan dari relasi Core Data
     var questionCount: Int {

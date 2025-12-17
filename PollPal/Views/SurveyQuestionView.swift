@@ -74,6 +74,15 @@ struct SurveyQuestionView: View {
                         Text(question.question_text ?? "")
                             .font(.title3.bold())
                             .foregroundColor(darkTeal)
+                        
+                        if let imageName = viewModel.currentQuestionImage {
+                            UniversalImage(imageName: imageName) // ✅ Pakai komponen baru ini
+                                .scaledToFit()
+                                .frame(maxHeight: 200)
+                                .cornerRadius(12)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.bottom, 8)
+                        }
 
                         // --- UI SWITCHER ---
                         let type = question.question_type ?? ""
@@ -286,7 +295,7 @@ struct SurveyQuestionView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(isPresented: $viewModel.showSuccessScreen) {
-            SurveySuccessView(pointsEarned: Int(viewModel.survey.survey_points))
+            SurveySuccessView(pointsEarned: Int(viewModel.survey.survey_rewards_points))
         }
     }
 }
