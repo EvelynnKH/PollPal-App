@@ -3,406 +3,506 @@
 //  PollPal
 //
 //  Created by student on 03/12/25.
+//  Updated for Prototype Showcase.
 //
 
 import CoreData
 import Foundation
 
 struct DataSeeder {
+
     static func seed(viewContext: NSManagedObjectContext) {
         // 1. Cek apakah database sudah ada isinya?
         if isDatabaseEmpty(viewContext: viewContext) {
-            print("Database kosong. Memulai seeding data...")
+            print("🌱 Database kosong. Memulai seeding data lengkap...")
             createData(viewContext: viewContext)
         } else {
-            print("Data sudah ada. Skip seeding.")
+            print("⚠️ Data sudah ada. Skip seeding.")
         }
     }
 
-    private static func isDatabaseEmpty(viewContext: NSManagedObjectContext) -> Bool {
+    private static func isDatabaseEmpty(viewContext: NSManagedObjectContext)
+        -> Bool
+    {
         let fetchRequest: NSFetchRequest<Survey> = Survey.fetchRequest()
         do {
             let count = try viewContext.count(for: fetchRequest)
             return count == 0
         } catch {
-            return true  // Jika error, anggap kosong biar aman
+            return true
         }
     }
 
     private static func createData(viewContext: NSManagedObjectContext) {
 
-        // --- Helpers untuk Tanggal ---
+        // --- HELPERS TANGGAL (Fix: Force Unwrap '!' agar tidak error optional) ---
         let calendar = Calendar.current
         let today = Date()
-        // Deadline 7 hari ke depan
-        let nextWeek = calendar.date(byAdding: .day, value: 7, to: today)
-        // Deadline 3 hari ke depan
-        let threeDaysLater = calendar.date(byAdding: .day, value: 3, to: today)
-        // Lahir 20 tahun lalu
-        let birthDateUser = calendar.date(byAdding: .year, value: -20, to: today)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let nextWeek = calendar.date(byAdding: .day, value: 7, to: today)!
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: today)!
 
-        // --- CATEGORY ---
-        let catTech = Category(context: viewContext)
-        catTech.category_id = UUID()
-        catTech.category_name = "Technology"
+        // --- 1. CATEGORIES ---
+        let catTech = createCategory(ctx: viewContext, name: "Technology")
+        let catDaily = createCategory(ctx: viewContext, name: "Daily Life")
+        let catHealth = createCategory(ctx: viewContext, name: "Health")
+        let catGaming = createCategory(ctx: viewContext, name: "Gaming")
+        let catFood = createCategory(ctx: viewContext, name: "Food & Beverage")
 
-        let catDaily = Category(context: viewContext)
-        catDaily.category_id = UUID()
-        catDaily.category_name = "Daily Life"
+        // --- 2. USERS (4 PERSONA LENGKAP) ---
 
-        let catHealth = Category(context: viewContext)
-        catHealth.category_id = UUID()
-        catHealth.category_name = "Health"
-
-        let catGaming = Category(context: viewContext)
-        catGaming.category_id = UUID()
-        catGaming.category_name = "Gaming"
-
-        // --- USER 1: FELICIA ---
+        // USER 1: FELICIA (Female, Surabaya, Gen Z)
         let felicia = User(context: viewContext)
         felicia.user_id = UUID()
         felicia.user_name = "Felicia Kathrin"
         felicia.user_email = "feli@gmail.com"
-        felicia.user_pwd = "feli123"
-        felicia.user_point = 100
+        felicia.user_pwd = "feli#123"
+        felicia.user_point = 2000  // Cukup untuk redeem
+        felicia.user_gender = "Female"
+        felicia.user_birthplace = "Surabaya"
+        felicia.user_birthdate = calendar.date(
+            byAdding: .year,
+            value: -20,
+            to: today
+        )
+        felicia.user_hp = "081234567890"
         felicia.user_header_img = "mountain"
         felicia.user_profile_img = "cat"
         felicia.user_created_at = today
         felicia.user_status_del = false
-        
-        // Atribut Baru User
-        felicia.user_birthdate = birthDateUser
-        felicia.user_birthplace = "Surabaya"
-        felicia.user_residence = "Citraland, Surabaya"
-        felicia.user_gender = "Female"
-        felicia.user_hp = "081234567890"
-        // felicia.user_ktm_img = Data() // Jika punya data dummy, masukkan disini
-
         felicia.addToLike_category(catTech)
         felicia.addToLike_category(catDaily)
 
-        // --- USER 2: EVELIN (CREATOR) ---
-        let userCreator = User(context: viewContext)
-        userCreator.user_id = UUID()
-        userCreator.user_name = "Evelin"  // Nama Owner
-        userCreator.user_email = "evelin@pollpal.com"
-        userCreator.user_pwd = "evelin123"
-        userCreator.user_header_img = "mountain"
-        userCreator.user_profile_img = "cat"
-        userCreator.user_point = 500
-        userCreator.user_created_at = today
-        userCreator.user_status_del = false
-        
-        // Atribut Baru User
-        userCreator.user_birthdate = calendar.date(byAdding: .year, value: -22, to: today)
-        userCreator.user_birthplace = "Jakarta"
-        userCreator.user_residence = "UC Apartment"
-        userCreator.user_gender = "Female"
-        userCreator.user_hp = "089876543211"
+        print("🔑 USER ID FELICIA: \(felicia.user_id!.uuidString)")
 
-        // --- SURVEY 1: TECH ---
-        let survey1 = Survey(context: viewContext)
-        survey1.survey_id = UUID()
-        survey1.survey_title = "Penggunaan AI Mahasiswa"
-        survey1.survey_description = "Seberapa sering mahasiswa menggunakan ChatGPT untuk tugas?"
-        survey1.survey_points = 50
-        survey1.survey_rewards_points = 250
-        survey1.survey_created_at = today
-        survey1.is_public = true
-        survey1.survey_updated_at = today
-        survey1.survey_status_del = false
-        survey1.owned_by_user = userCreator
-        
-        // Atribut Baru Survey
-        survey1.survey_deadline = nextWeek // 7 hari lagi
-        survey1.survey_img_url = "survey_ai_illustration" // Nama aset gambar dummy
-        survey1.survey_target_responden = 100
-        
-        // Kriteria Responden
-        survey1.survey_usia_min = 18
-        survey1.survey_usia_max = 25
-        survey1.survey_gender = "All"
-        survey1.survey_birthplace = "All"
-        survey1.survey_residence = "All"
+        // USER 2: BUDI (Male, Jakarta, Millennial)
+        let budi = User(context: viewContext)
+        budi.user_id = UUID()
+        budi.user_name = "Budi Santoso"
+        budi.user_email = "budi@gmail.com"
+        budi.user_pwd = "budi#123"
+        budi.user_point = 5000  // Cukup untuk post banyak survey
+        budi.user_gender = "Male"
+        budi.user_birthplace = "Jakarta"
+        budi.user_birthdate = calendar.date(
+            byAdding: .year,
+            value: -25,
+            to: today
+        )
+        budi.user_hp = "081299998888"
+        budi.user_header_img = "mountain"
+        budi.user_profile_img = "cat"
+        budi.user_created_at = today
+        budi.user_status_del = false
 
-        // Relasi Category (Many-to-Many)
-        survey1.addToHas_category(catTech)
+        // USER 3: EVELIN (Ex-Siti) (Female, Bandung)
+        let evelin = User(context: viewContext)
+        evelin.user_id = UUID()
+        evelin.user_name = "Evelin Alim"
+        evelin.user_email = "evelin@gmail.com"
+        evelin.user_pwd = "evelin#123"
+        evelin.user_point = 1500  // Modal awal
+        evelin.user_gender = "Female"
+        evelin.user_birthplace = "Bandung"
+        evelin.user_birthdate = calendar.date(
+            byAdding: .year,
+            value: -19,
+            to: today
+        )
+        evelin.user_hp = "081877776666"
+        evelin.user_header_img = "mountain"
+        evelin.user_profile_img = "cat"
+        evelin.user_created_at = today
+        evelin.user_status_del = false
 
-        // Tambah Dummy Question
-        let q1 = Question(context: viewContext)
-        q1.question_id = UUID()
-        q1.question_text = "Apakah kamu pakai ChatGPT?"
-        q1.question_type = "Multiple Choice"
-        q1.question_price = 10
-        q1.question_status_del = false
-        q1.in_survey = survey1
+        // USER 4: ANDI (Male, Surabaya, Newbie)
+        let andi = User(context: viewContext)
+        andi.user_id = UUID()
+        andi.user_name = "Andi Pratama"
+        andi.user_email = "andi@gmail.com"
+        andi.user_pwd = "andi#123"
+        andi.user_point = 500  // Poin dikit (New User)
+        andi.user_gender = "Male"
+        andi.user_birthplace = "Surabaya"
+        andi.user_birthdate = calendar.date(
+            byAdding: .year,
+            value: -22,
+            to: today
+        )
+        andi.user_hp = "081355554444"
+        andi.user_header_img = "mountain"
+        andi.user_profile_img = "cat"
+        andi.user_created_at = today
+        andi.user_status_del = false
 
-        // Option
-        let opt1_yes = addOption(to: q1, text: "Ya, Sering", context: viewContext)
-        let opt1_no = addOption(to: q1, text: "Tidak Pernah", context: viewContext)
+        // --- 3. SURVEYS (SCENARIOS) ---
 
-        let q2 = Question(context: viewContext)
-        q2.question_id = UUID()
-        q2.question_text = "Ceritakan pengalamanmu!"
-        q2.question_type = "Long Answer"
-        q2.question_price = 10
-        q2.question_status_del = false
-        q2.in_survey = survey1
+        // SCENARIO 1: UNIVERSAL (Muncul di Felicia)
+        let surveyAI = createSurvey(
+            ctx: viewContext,
+            owner: budi,
+            title: "Penggunaan AI Mahasiswa",
+            desc: "Seberapa sering mahasiswa menggunakan ChatGPT untuk tugas?",
+            points: 50,
+            quota: 100,
+            deadline: nextWeek,
+            gender: "All",
+            loc: "All",
+            minAge: 18,
+            maxAge: 30,
+            categories: [catTech],
+            img: "survey_ai_illustration"
+        )
+        let q1 = addQuestion(
+            ctx: viewContext,
+            survey: surveyAI,
+            text: "Apakah kamu pakai ChatGPT?",
+            type: "Multiple Choice"
+        )
+        let opt1_yes = addOption(ctx: viewContext, q: q1, text: "Ya, Sering")
+        addOption(ctx: viewContext, q: q1, text: "Jarang")
+        addOption(ctx: viewContext, q: q1, text: "Tidak Pernah")
 
-        // --- SURVEY 2: HEALTH ---
-        let survey2 = Survey(context: viewContext)
-        survey2.survey_id = UUID()
-        survey2.survey_title = "Pola Tidur & Gadget"
-        survey2.survey_description = "Hubungan main HP sebelum tidur dengan kualitas tidur."
-        survey2.survey_points = 50
-        survey2.survey_rewards_points = 250
-        survey2.survey_created_at = today
-        survey2.is_public = true
-        survey2.survey_updated_at = today
-        survey2.survey_status_del = false
-        survey2.owned_by_user = felicia
-        
-        // Atribut Baru Survey
-        survey2.survey_deadline = threeDaysLater // 3 hari lagi
-        survey2.survey_img_url = "survey_sleep"
-        survey2.survey_target_responden = 50
-        
-        // Kriteria
-        survey2.survey_usia_min = 15
-        survey2.survey_usia_max = 60
-        survey2.survey_gender = "All"
-        survey2.survey_birthplace = "All"
-        survey2.survey_residence = "Surabaya" // Target spesifik lokasi
+        let q2 = addQuestion(
+            ctx: viewContext,
+            survey: surveyAI,
+            text: "Ceritakan pengalamanmu!",
+            type: "Long Answer"
+        )
 
-        survey2.addToHas_category(catHealth)
-        survey2.addToHas_category(catTech)
+        // SCENARIO 2: TARGETED LOCATION (Muncul di Felicia karena Surabaya)
+        // Owner: Evelin (Supaya Felicia bisa isi)
+        let surveySleep = createSurvey(
+            ctx: viewContext,
+            owner: evelin,
+            title: "Pola Tidur & Gadget",
+            desc:
+                "Hubungan main HP sebelum tidur dengan kualitas tidur anak muda Surabaya.",
+            points: 50,
+            quota: 50,
+            deadline: nextWeek,
+            gender: "All",
+            loc: "Surabaya",
+            minAge: 15,
+            maxAge: 30,
+            categories: [catHealth],
+            img: "survey_sleep"
+        )
+        addQuestion(
+            ctx: viewContext,
+            survey: surveySleep,
+            text: "Jam berapa tidur?",
+            type: "Short Answer"
+        )
 
-        let q4 = Question(context: viewContext)
-        q4.question_id = UUID()
-        q4.question_text = "Jam berapa kamu tidur?"
-        q4.question_type = "Multiple Choice"
-        q4.question_price = 10
-        q4.question_status_del = false
-        q4.in_survey = survey2
+        // SCENARIO 3: MY OWN SURVEY (Tidak boleh muncul di list 'Available' Felicia)
+        // Owner: Felicia
+        let surveyKantin = createSurvey(
+            ctx: viewContext,
+            owner: felicia,
+            title: "Evaluasi Kantin UC",
+            desc: "Survey kepuasan pelanggan kantin lantai 1.",
+            points: 20,
+            quota: 200,
+            deadline: nextMonth,
+            gender: "All",
+            loc: "UC Apartment",
+            minAge: 17,
+            maxAge: 30,
+            categories: [catDaily, catFood],
+            img: "survey_food"
+        )
+        addQuestion(
+            ctx: viewContext,
+            survey: surveyKantin,
+            text: "Makanan favorit?",
+            type: "Short Answer"
+        )
 
-        addOption(to: q4, text: "< 10 Malam", context: viewContext)
-        addOption(to: q4, text: "> 12 Malam", context: viewContext)
+        // SCENARIO 4: MISMATCH DEMOGRAPHY (Tidak boleh muncul di Felicia)
+        // Target: Male (Felicia Female), Jakarta (Felicia Surabaya)
+        let surveyGaming = createSurvey(
+            ctx: viewContext,
+            owner: budi,
+            title: "Komunitas Gaming Jakarta",
+            desc: "Gathering pecinta Dota 2 region Jakarta.",
+            points: 100,
+            quota: 50,
+            deadline: nextWeek,
+            gender: "Male",
+            loc: "Jakarta",
+            minAge: 18,
+            maxAge: 30,
+            categories: [catGaming],
+            img: "survey_ai_illustration"
+        )
 
-        let q5 = Question(context: viewContext)
-        q5.question_id = UUID()
-        q5.question_text = "Apakah main HP di kasur?"
-        q5.question_type = "Multiple Choice"
-        q5.question_price = 10
-        q5.question_status_del = false
-        q5.in_survey = survey2
+        // SCENARIO 5: EXPIRED (Tidak boleh muncul)
+        let surveyExpired = createSurvey(
+            ctx: viewContext,
+            owner: budi,
+            title: "Flash Sale 12.12",
+            desc: "Survey cepat tanggap.",
+            points: 500,
+            quota: 50,
+            deadline: yesterday,  // EXPIRED
+            gender: "All",
+            loc: "All",
+            minAge: 10,
+            maxAge: 60,
+            categories: [catDaily],
+            img: "survey_office"
+        )
 
-        // --- SURVEY 3: KANTIN ---
-        let survey3 = Survey(context: viewContext)
-        survey3.survey_id = UUID()
-        survey3.survey_title = "Evaluasi Kantin UC"
-        survey3.survey_description = "Survey kepuasan pelanggan kantin lantai 1"
-        survey3.survey_points = 50
-        survey3.survey_rewards_points = 20
-        survey3.is_public = true
-        survey3.survey_created_at = today
-        survey3.survey_updated_at = today
-        survey3.survey_status_del = false
-        survey3.owned_by_user = felicia
-        
-        // Atribut Baru Survey
-        survey3.survey_deadline = calendar.date(byAdding: .month, value: 1, to: today) // 1 bulan lagi
-        survey3.survey_img_url = "survey_food"
-        survey3.survey_target_responden = 200
-        
-        survey3.survey_usia_min = 17
-        survey3.survey_usia_max = 30
-        survey3.survey_gender = "All"
-        survey3.survey_birthplace = "All"
-        survey3.survey_residence = "UC Apartment"
+        // SCENARIO 6: QUOTA FULL (Tidak boleh muncul)
+        // Owner: Evelin
+        let surveyFull = createSurvey(
+            ctx: viewContext,
+            owner: evelin,
+            title: "Giveaway Voucher 50k",
+            desc: "Hanya untuk 1 orang tercepat.",
+            points: 1000,
+            quota: 1,
+            deadline: nextWeek,
+            gender: "All",
+            loc: "All",
+            minAge: 10,
+            maxAge: 60,
+            categories: [catDaily],
+            img: "survey_office"
+        )
+        // Buat Andi mengisi survey ini agar kuota penuh
+        fillSurvey(ctx: viewContext, survey: surveyFull, user: andi)
 
-        survey3.addToHas_category(catDaily)
+        // SCENARIO 7: COMPLEX DEMO (Muncul di Felicia - Universal)
+        // Berisi semua tipe soal untuk showcase
+        let surveyDemo = createSurvey(
+            ctx: viewContext,
+            owner: budi,
+            title: "Survey Kepuasan Karyawan (Demo)",
+            desc:
+                "Demo semua tipe soal: Pilihan Ganda, Isian, Kotak Centang, Scale.",
+            points: 100,
+            quota: 500,
+            deadline: nextMonth,
+            gender: "All",
+            loc: "All",
+            minAge: 18,
+            maxAge: 55,
+            categories: [catDaily],
+            img: "survey_office"
+        )
 
-        let q6 = Question(context: viewContext)
-        q6.question_id = UUID()
-        q6.question_text = "Apakah kamu setuju makanannya enak?"
-        q6.question_type = "Short Answer"
-        q6.question_price = 1
-        q6.question_status_del = false
-        q6.in_survey = survey3 // Perbaikan: Sebelumnya survey1, harusnya survey3
+        // Q1: Multiple Choice
+        let qMc = addQuestion(
+            ctx: viewContext,
+            survey: surveyDemo,
+            text: "Divisi?",
+            type: "Multiple Choice"
+        )
+        addOption(ctx: viewContext, q: qMc, text: "IT")
+        addOption(ctx: viewContext, q: qMc, text: "Marketing")
 
-        // --- RESPONSES & TRANSACTIONS (Tetap Sama, disesuaikan sedikit) ---
-        let hRes = HResponse(context: viewContext)
-        hRes.hresponse_id = UUID()
-        hRes.submitted_at = today
-        hRes.in_survey = survey1
-        hRes.is_filled_by_user = felicia
+        // Q2: Check Box
+        let qCheck = addQuestion(
+            ctx: viewContext,
+            survey: surveyDemo,
+            text: "Fasilitas favorit? (Check Box)",
+            type: "Check Box"
+        )
+        addOption(ctx: viewContext, q: qCheck, text: "Gym")
+        addOption(ctx: viewContext, q: qCheck, text: "Kantin")
 
+        // Q3: Drop Down
+        let qDrop = addQuestion(
+            ctx: viewContext,
+            survey: surveyDemo,
+            text: "Lama bekerja? (Dropdown)",
+            type: "Drop Down"
+        )
+        addOption(ctx: viewContext, q: qDrop, text: "< 1 Tahun")
+        addOption(ctx: viewContext, q: qDrop, text: "> 1 Tahun")
+
+        // Q4: Linear Scale
+        let qScale = addQuestion(
+            ctx: viewContext,
+            survey: surveyDemo,
+            text: "Kepuasan Gaji (1-5)",
+            type: "Linear Scale"
+        )
+        for i in 1...5 { addOption(ctx: viewContext, q: qScale, text: "\(i)") }
+
+        // --- 4. HISTORY & TRANSACTIONS (Felicia's Data) ---
+
+        // Felicia pernah mengisi Survey AI (Jadi masuk History, gak muncul di Available)
+        let hRes = fillSurvey(ctx: viewContext, survey: surveyAI, user: felicia)
+
+        // Isi jawaban detail (DResponse)
         let dRes1 = DResponse(context: viewContext)
         dRes1.dresponse_id = UUID()
         dRes1.in_hresponse = hRes
         dRes1.in_question = q1
-        dRes1.has_option = NSSet(array: [opt1_yes])
-        dRes1.dresponse_answer_text = opt1_yes.option_text
+        dRes1.dresponse_answer_text = "Ya, Sering"
+        dRes1.has_option = NSSet(object: opt1_yes)
 
         let dRes2 = DResponse(context: viewContext)
         dRes2.dresponse_id = UUID()
         dRes2.in_hresponse = hRes
         dRes2.in_question = q2
-        dRes2.dresponse_answer_text = "Sangat membantu tugas coding saya."
+        dRes2.dresponse_answer_text = "Sangat membantu coding."
 
-        // Transactions
-        let trans = Transaction(context: viewContext)
-        trans.transaction_id = UUID()
-        trans.transaction_point_change = 1000
-        trans.transaction_description = "Top Up Berhasil"
-        trans.transaction_status_del = false
-        trans.owned_by_user = felicia
-        trans.transaction_created_at = calendar.date(byAdding: .day, value: -1, to: today)
-        trans.transaction_type = "TOP UP"
+        // Transaction History Felicia
+        createTransaction(
+            ctx: viewContext,
+            user: felicia,
+            amount: 1000,
+            desc: "Top Up Berhasil",
+            type: "TOP UP",
+            date: calendar.date(byAdding: .day, value: -2, to: today)!
+        )
 
-        let trans2 = Transaction(context: viewContext)
-        trans2.transaction_id = UUID()
-        trans2.transaction_point_change = 50
-        trans2.transaction_description = "Reward Survey: Kepuasan Customer"
-        trans2.transaction_status_del = false
-        trans2.owned_by_user = felicia
-        trans2.in_survey = survey1
-        trans2.transaction_created_at = calendar.date(byAdding: .hour, value: -5, to: today)
-        trans2.transaction_type = "REWARD SURVEY"
+        createTransaction(
+            ctx: viewContext,
+            user: felicia,
+            amount: 50,
+            desc: "Reward: Penggunaan AI",
+            type: "REWARD SURVEY",
+            date: yesterday,
+            survey: surveyAI
+        )
 
-        let trans3 = Transaction(context: viewContext)
-        trans3.transaction_id = UUID()
-        trans3.transaction_point_change = -1000
-        trans3.transaction_description = "Survey Cost: Riset Pasar Produk Baru"
-        trans3.transaction_status_del = false
-        trans3.owned_by_user = felicia
-        trans3.in_survey = survey2
-        trans3.transaction_created_at = calendar.date(byAdding: .day, value: -3, to: today)
-        trans3.transaction_type = "COST SURVEY"
+        createTransaction(
+            ctx: viewContext,
+            user: felicia,
+            amount: -500,
+            desc: "Withdraw to GoPay",
+            type: "WITHDRAW",
+            date: today
+        )
 
-        let trans4 = Transaction(context: viewContext)
-        trans4.transaction_id = UUID()
-        trans4.transaction_point_change = -500
-        trans4.transaction_description = "Withdraw Points"
-        trans4.transaction_status_del = false
-        trans4.owned_by_user = felicia
-        trans4.transaction_created_at = calendar.date(byAdding: .hour, value: -2, to: today)
-        trans4.transaction_type = "WITHDRAW"
-
-        // --- SURVEY DEMO (Baru) ---
-        let surveyDemo = Survey(context: viewContext)
-        surveyDemo.survey_id = UUID()
-        surveyDemo.survey_title = "Survey Kepuasan Karyawan"
-        surveyDemo.survey_description = "Demo semua tipe soal: Pilihan Ganda, Isian, Kotak Centang, dll."
-        surveyDemo.survey_points = 100
-        surveyDemo.survey_rewards_points = 500
-        surveyDemo.survey_created_at = today
-        surveyDemo.is_public = true
-        surveyDemo.survey_status_del = false
-        surveyDemo.owned_by_user = userCreator
-        
-        // Atribut Baru
-        surveyDemo.survey_deadline = calendar.date(byAdding: .day, value: 30, to: today)
-        surveyDemo.survey_img_url = "survey_office"
-        surveyDemo.survey_target_responden = 500
-        surveyDemo.survey_usia_min = 20
-        surveyDemo.survey_usia_max = 55
-        surveyDemo.survey_gender = "All"
-        surveyDemo.survey_birthplace = "All"
-        surveyDemo.survey_residence = "All"
-
-        surveyDemo.addToHas_category(catDaily)
-
-        // Q1: Multiple Choice
-        let qMc = Question(context: viewContext)
-        qMc.question_id = UUID()
-        qMc.question_text = "Divisi apa tempat anda bekerja?"
-        qMc.question_type = "Multiple Choice"
-        qMc.question_price = 10
-        qMc.question_status_del = false
-        qMc.in_survey = surveyDemo
-
-        addOption(to: qMc, text: "Marketing", context: viewContext)
-        addOption(to: qMc, text: "IT / Tech", context: viewContext)
-        addOption(to: qMc, text: "HRD", context: viewContext)
-
-        // Q2: Short Answer
-        let qShort = Question(context: viewContext)
-        qShort.question_id = UUID()
-        qShort.question_text = "Siapa nama manajer langsung anda?"
-        qShort.question_type = "Short Answer"
-        qShort.question_price = 10
-        qShort.question_status_del = false
-        qShort.in_survey = surveyDemo
-
-        // Q3: Paragraph
-        let qPara = Question(context: viewContext)
-        qPara.question_id = UUID()
-        qPara.question_text = "Jelaskan kendala terbesar anda saat bekerja di kantor ini?"
-        qPara.question_type = "Paragraph"
-        qPara.question_price = 15
-        qPara.question_status_del = false
-        qPara.in_survey = surveyDemo
-
-        // Q4: Check Box
-        let qCheck = Question(context: viewContext)
-        qCheck.question_id = UUID()
-        qCheck.question_text = "Fasilitas apa yang sering anda gunakan? (Pilih semua yang sesuai)"
-        qCheck.question_type = "Check Box"
-        qCheck.question_price = 10
-        qCheck.question_status_del = false
-        qCheck.in_survey = surveyDemo
-
-        addOption(to: qCheck, text: "Kantin", context: viewContext)
-        addOption(to: qCheck, text: "Gym", context: viewContext)
-        addOption(to: qCheck, text: "Ruang Meeting", context: viewContext)
-        addOption(to: qCheck, text: "Area Parkir", context: viewContext)
-
-        // Q5: Drop Down
-        let qDrop = Question(context: viewContext)
-        qDrop.question_id = UUID()
-        qDrop.question_text = "Berapa lama anda sudah bekerja disini?"
-        qDrop.question_type = "Drop Down"
-        qDrop.question_price = 10
-        qDrop.question_status_del = false
-        qDrop.in_survey = surveyDemo
-
-        addOption(to: qDrop, text: "< 1 Tahun", context: viewContext)
-        addOption(to: qDrop, text: "1 - 3 Tahun", context: viewContext)
-        addOption(to: qDrop, text: "> 3 Tahun", context: viewContext)
-
-        // Q6: Linear Scale
-        let qScale = Question(context: viewContext)
-        qScale.question_id = UUID()
-        qScale.question_text = "Seberapa puas anda dengan gaji saat ini? (1 = Kecewa, 5 = Sangat Puas)"
-        qScale.question_type = "Linear Scale"
-        qScale.question_price = 10
-        qScale.question_status_del = false
-        qScale.in_survey = surveyDemo
-
-        for i in 1...5 {
-            addOption(to: qScale, text: "\(i)", context: viewContext)
-        }
-
-        // SIMPAN
+        // --- SIMPAN ---
         do {
             try viewContext.save()
-            print("✅ Seeding Berhasil Disimpan dengan Data Baru!")
+            print("✅ Seeding Berhasil! Data user & survey lengkap.")
         } catch {
             print("❌ Gagal menyimpan seeder: \(error.localizedDescription)")
         }
     }
 
+    // MARK: - HELPER FUNCTIONS (Supaya kode rapi)
+
+    private static func createCategory(
+        ctx: NSManagedObjectContext,
+        name: String
+    ) -> Category {
+        let cat = Category(context: ctx)
+        cat.category_id = UUID()
+        cat.category_name = name
+        return cat
+    }
+
+    @discardableResult
+    private static func createSurvey(
+        ctx: NSManagedObjectContext,
+        owner: User,
+        title: String,
+        desc: String,
+        points: Int,
+        quota: Int,
+        deadline: Date?,
+        gender: String,
+        loc: String,
+        minAge: Int,
+        maxAge: Int,
+        categories: [Category],
+        img: String
+    ) -> Survey {
+        let s = Survey(context: ctx)
+        s.survey_id = UUID()
+        s.survey_title = title
+        s.survey_description = desc
+        s.survey_points = Int32(points * quota)  // Biaya owner
+        s.survey_rewards_points = Int32(points)  // Reward user
+        s.survey_target_responden = Int32(quota)
+        s.survey_deadline = deadline
+        s.survey_gender = gender
+        s.survey_residence = loc
+        s.survey_usia_min = Int32(minAge)
+        s.survey_usia_max = Int32(maxAge)
+        s.survey_img_url = img
+        s.is_public = true
+        s.survey_status_del = false
+        s.survey_created_at = Date()
+        s.survey_updated_at = Date()
+        s.owned_by_user = owner
+
+        for cat in categories {
+            s.addToHas_category(cat)
+        }
+        return s
+    }
+
+    @discardableResult
+    private static func addQuestion(
+        ctx: NSManagedObjectContext,
+        survey: Survey,
+        text: String,
+        type: String
+    ) -> Question {
+        let q = Question(context: ctx)
+        q.question_id = UUID()
+        q.question_text = text
+        q.question_type = type
+        q.question_price = 10
+        q.question_status_del = false
+        q.in_survey = survey
+        return q
+    }
+
     @discardableResult
     private static func addOption(
-        to question: Question,
-        text: String,
-        context: NSManagedObjectContext
+        ctx: NSManagedObjectContext,
+        q: Question,
+        text: String
     ) -> Option {
-        let opt = Option(context: context)
-        opt.option_id = UUID()
-        opt.option_text = text
-        question.addToHas_option(opt)
-        return opt
+        let o = Option(context: ctx)
+        o.option_id = UUID()
+        o.option_text = text
+        o.in_question = q
+        return o
+    }
+
+    @discardableResult
+    private static func fillSurvey(
+        ctx: NSManagedObjectContext,
+        survey: Survey,
+        user: User
+    ) -> HResponse {
+        let h = HResponse(context: ctx)
+        h.hresponse_id = UUID()
+        h.submitted_at = Date()
+        h.in_survey = survey
+        h.is_filled_by_user = user
+        return h
+    }
+
+    private static func createTransaction(
+        ctx: NSManagedObjectContext,
+        user: User,
+        amount: Int,
+        desc: String,
+        type: String,
+        date: Date,
+        survey: Survey? = nil
+    ) {
+        let t = Transaction(context: ctx)
+        t.transaction_id = UUID()
+        t.transaction_point_change = Int32(amount)
+        t.transaction_description = desc
+        t.transaction_type = type
+        t.transaction_created_at = date
+        t.transaction_status_del = false
+        t.owned_by_user = user
+        if let s = survey { t.in_survey = s }
     }
 }

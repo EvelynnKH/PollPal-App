@@ -56,6 +56,15 @@ class SurveyQuestionViewModel: ObservableObject {
     }
     
     // MARK: - Computed Properties
+    
+    var currentQuestionImage: String? {
+            // Cek apakah soal sekarang punya gambar dan string-nya tidak kosong
+            guard let imgName = currentQuestion?.question_img_url, !imgName.isEmpty else {
+                return nil
+            }
+            return imgName
+        }
+    
     var currentQuestion: Question? {
         guard questions.indices.contains(currentIndex) else { return nil }
         return questions[currentIndex]
@@ -150,7 +159,8 @@ class SurveyQuestionViewModel: ObservableObject {
             }
             
             // Ensure survey has a point value
-            let rewardPoints = survey.survey_points
+            let rewardPoints = survey.survey_rewards_points
+            print("INI REWARD : \(rewardPoints ?? 0)")
             
             // 2. Buat HResponse (Header Response)
             let hRes = HResponse(context: viewContext)
