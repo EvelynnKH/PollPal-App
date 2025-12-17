@@ -280,6 +280,9 @@ class DashboardViewModel: ObservableObject {
                     isMatch = false
                 }
                 
+                let img = survey.survey_img_url
+                print("   ✅ Img: \(img)")
+                
                 // KESIMPULAN
                 if isMatch {
                     print("   🎉 RESULT: AKAN MUNCUL DI LIST")
