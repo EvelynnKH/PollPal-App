@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SuccessTopUpView: View {
     @Environment(\.dismiss) var dismiss
+    var pointsAdded: Int32
     var body: some View {
         ZStack {
             VStack(spacing: 30) {
@@ -30,6 +31,11 @@ struct SuccessTopUpView: View {
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(Color.darkTeal)
+                    
+                    Text("+ \(pointsAdded.formattedWithSeparator()) Points")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color.brandOrange)
+                        .padding(.bottom, 10)
                     
                     Text("The balance will be added to your wallet")
                         .font(.subheadline)
@@ -64,5 +70,5 @@ struct SuccessTopUpView: View {
 // MARK: - Previe
 
 #Preview {
-    SuccessTopUpView()
+    SuccessTopUpView(pointsAdded: 1000)
 }

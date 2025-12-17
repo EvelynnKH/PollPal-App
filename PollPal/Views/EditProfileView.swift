@@ -101,7 +101,7 @@ struct EditProfileView: View {
                 InputLabel(title: "Place of Birth", darkTeal: darkTeal)
 
                 // 🚨 REPLACED TextField with Text view for controlled display
-                Text(viewModel.placeOfBirth)
+                Text(viewModel.placeOfResidence)
                     .frame(maxWidth: .infinity, alignment: .leading) // Ensure it fills the width
                     
                     // 1. Explicitly set foreground style to gray

@@ -86,7 +86,7 @@ class EditProfileViewModel: ObservableObject {
                 // Display Only Fields:
                 self.gender = user.user_gender ?? "Not Set"
                 self.dateOfBirth = user.user_birthdate ?? Date()
-                self.placeOfBirth = user.user_birthplace ?? "Not Set"
+                //self.placeOfBirth = user.user_birthplace ?? "Not Set"
                 
                 // Editable Fields:
                 self.placeOfResidence = user.user_residence ?? "Not Set"

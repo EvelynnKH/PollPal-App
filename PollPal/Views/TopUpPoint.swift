@@ -170,7 +170,7 @@ struct TopUpPoint: View {
                     .padding(.horizontal)
                     .padding(.bottom, 25)
                     .navigationDestination(isPresented: $navigateToSuccess) {
-                        SuccessTopUpView()
+                        SuccessTopUpView(pointsAdded: selectedAmount)
                             .navigationBarBackButtonHidden(true)
                     }
                 }

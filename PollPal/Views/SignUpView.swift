@@ -10,6 +10,7 @@ import SwiftUI
 struct SignUpView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var viewModel: SignUpViewModel
+    @Environment(\.dismiss) var dismiss
     
     @State private var isPasswordVisible = false
     
@@ -97,6 +98,7 @@ struct SignUpView: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.bottom, 20)
         }
+        
         .padding(.horizontal, 20)
         
         .navigationBarBackButtonHidden(true)

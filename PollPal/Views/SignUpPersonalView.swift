@@ -82,7 +82,7 @@ struct SignUpPersonalView: View {
                         "DKI Jakarta", "Jawa Barat", "Jawa Tengah", "DI Yogyakarta", "Jawa Timur", "Banten",
                         "Bali", "Nusa Tenggara Barat", "Nusa Tenggara Timur",
                         "Kalimantan Barat", "Kalimantan Tengah", "Kalimantan Selatan", "Kalimantan Timur", "Kalimantan Utara",
-                        "Sulawesi Utara", "Sulawesi Tengah", "Sulawesi Selatan", "Sulawesi Tenggara", "Gorontalo", "Sulawesi Barat",
+                        "Sulawesi Utara", "Sulawesi Tengah", "Sulawesi Selatan", " Sulawesi Tenggara", "Gorontalo", "Sulawesi Barat",
                         "Maluku", "Maluku Utara",
                         "Papua Barat", "Papua", "Papua Tengah", "Papua Pegunungan", "Papua Selatan", "Papua Barat Daya"
                     ].sorted()
@@ -110,10 +110,10 @@ struct SignUpPersonalView: View {
                                 }
                             }
                         } label: {
-                            // Tampilan Tombol agar mirip TextField
                             HStack {
-                                Text(viewModel.placeOfBirth.isEmpty ? "Select Birth Place Province" : viewModel.placeOfBirth)
-                                    .foregroundColor(viewModel.placeOfBirth.isEmpty ? .gray : .black)
+                                // Use placeOfResidence here to match the Button action
+                                Text(viewModel.placeOfResidence.isEmpty ? "Select Residence Province" : viewModel.placeOfResidence)
+                                    .foregroundColor(viewModel.placeOfResidence.isEmpty ? .gray : .black)
                                 
                                 Spacer()
                                 
@@ -122,7 +122,7 @@ struct SignUpPersonalView: View {
                                     .foregroundColor(.gray)
                             }
                             .padding()
-                            .background(Color.gray.opacity(0.15)) // Background abu-abu seperti input lain
+                            .background(Color.gray.opacity(0.15))
                             .cornerRadius(12)
                         }
                     }
