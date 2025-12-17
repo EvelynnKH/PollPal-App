@@ -192,31 +192,69 @@ extension DashboardRView {
                 HStack(spacing: 12) {
                     ForEach(viewModel.popularSurveys, id: \.self) { survey in
                         NavigationLink(destination: SurveyDetailView(survey: survey)) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(survey.survey_title ?? "No Title")
-                                    .font(.headline)
-                                    .fontWeight(.bold)
-                                    .padding()
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
-                                    .truncationMode(.tail)
-                                    .fixedSize(
-                                        horizontal: false,
-                                        vertical: true
-                                    )
+                            ZStack {
+
+                                // MARK: - BACKGROUND IMAGE (LOCAL FILE)
+                                if let path = survey.survey_img_url {
+                                    let fileURL = URL(fileURLWithPath: path)
+
+                                    if let uiImage = UIImage(contentsOfFile: fileURL.path) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 240, height: 130)
+                                            .clipped()
+                                    } else {
+                                        Color.white
+                                    }
+                                }
+
+                                // MARK: - DIM OVERLAY (OVER IMAGE)
+                                if survey.survey_img_url != nil {
+                                    Color.black.opacity(0.45)
+                                }
+
+                                // MARK: - CONTENT
+                                HStack(spacing: 10) {
+                                    VStack(alignment: .leading, spacing: 8) {
+
+                                        Text(survey.survey_title ?? "No Title")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(
+                                                survey.survey_img_url != nil ? .white : Color(hex: "#003F57")
+                                            )
+                                            .lineLimit(2)
+                                            .frame(height: 36, alignment: .topLeading)
+
+                                        Spacer()
+
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "gift.fill")
+                                                .font(.caption)
+                                                .foregroundColor(Color(hex: "#FF9F1C"))
+
+                                            Text("\(survey.survey_rewards_points) pts")
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(
+                                                    survey.survey_img_url != nil ? .white : Color(hex: "#003F57")
+                                                )
+                                        }
+                                    }
+
+                                    Spacer()
+                                }
+                                .padding(14)
                             }
-                            .padding(10)
-                            .foregroundColor(Color(hex: "#0C4254"))
-                            .frame(
-                                maxWidth: 250,
-                                minHeight: 100,
-                                alignment: .leading
-                            )
-                            .background(Color.white)
-                            .cornerRadius(14)
-                            .shadow(color: .black.opacity(0.2), radius: 5, y: 3)
-                            .padding(.vertical)
+                            .frame(width: 240, height: 130)
+                            .cornerRadius(16)
+                            .shadow(color: .black.opacity(0.15), radius: 6, y: 4)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 6)
                         }
+
+
                     }
                 }
                 .padding(.horizontal)
@@ -224,6 +262,21 @@ extension DashboardRView {
         }
     }
     
+    @ViewBuilder
+    private func surveyBackgroundImage(for survey: Survey) -> some View {
+        if let path = survey.survey_img_url {
+            let fileURL = URL(fileURLWithPath: path)
+
+            if let uiImage = UIImage(contentsOfFile: fileURL.path) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+            }
+        }
+    }
+
+
+
     // 8. List Ongoing Survey
     private var ongoingSurveysList: some View {
         VStack {

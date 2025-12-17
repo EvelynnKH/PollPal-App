@@ -36,7 +36,7 @@ struct FinishingSurveyView: View {
     @State private var minAge: String = ""
     @State private var maxAge: String = ""
 
-    @State private var domicile: String = ""
+    @State private var domicile: String = "All"
 
     @State private var targetRespondents: String = ""
 
@@ -134,7 +134,7 @@ struct FinishingSurveyView: View {
         }
 
         selectedGender = survey.survey_gender ?? "All"
-        domicile = survey.survey_residence ?? ""
+        domicile = survey.survey_residence ?? "All"
 
         if survey.survey_usia_min > 0 {
             minAge = String(survey.survey_usia_min)
@@ -184,6 +184,11 @@ struct FinishingSurveyView: View {
         if max > 0 && min > max {
             validationMessage =
                 "Minimum age cannot be greater than maximum age."
+            return false
+        }
+        if min == 0 || max == 0 {
+            validationMessage =
+                "Please enter the valid age range for your survey respondents."
             return false
         }
 
@@ -496,12 +501,9 @@ struct FinishingSurveyView: View {
                         }
                     } label: {
                         HStack {
-                            Text(
-                                domicile.isEmpty
-                                    ? "Select Birth Place Province" : domicile
-                            )
+                            Text(domicile)
                             .foregroundColor(
-                                domicile.isEmpty ? .gray : .primary
+                                domicile == "All" ? .gray : .primary
                             )
 
                             Spacer()
@@ -559,15 +561,18 @@ struct FinishingSurveyView: View {
                 .onChange(of: selectedItem) {
                     Task {
                         guard let item = selectedItem,
-                            let data = try? await item.loadTransferable(
-                                type: Data.self
-                            ),
-                            let uiImage = UIImage(data: data)
+                              let data = try? await item.loadTransferable(type: Data.self),
+                              let uiImage = UIImage(data: data)
                         else { return }
+
                         selectedImage = Image(uiImage: uiImage)
-                        // TODO: Jangan lupa simpan image ini ke CoreData/Storage nanti
+
+                        if let path = saveImageToDocuments(data) {
+                            survey.survey_img_url = path
+                        }
                     }
                 }
+
             }
             .padding(.horizontal)
 
@@ -734,4 +739,21 @@ struct FinishingSurveyView: View {
         .padding(.vertical, 10)  // Small vertical padding to separate it from the next section (which is the bottom bar)
         // Remove the outer background and corner radius to let the inner Vstack handle the card styling
     }
+    
+    func saveImageToDocuments(_ imageData: Data) -> String? {
+        let filename = UUID().uuidString + ".jpg"
+        let url = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0].appendingPathComponent(filename)
+
+        do {
+            try imageData.write(to: url)
+            return url.absoluteString
+        } catch {
+            print("❌ Failed to save image:", error)
+            return nil
+        }
+    }
+
 }
