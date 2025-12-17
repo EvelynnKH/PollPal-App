@@ -264,104 +264,95 @@ struct SurveyView: View {
     }
 
     // MARK: Sticky Bottom Bar
-    private var bottomStickyBar: some View {
-        VStack(spacing: 0) {
-            if selectedTab == 0 {
-                HStack {
-                    Spacer()
-                    NavigationLink(
-                        destination: FinishingSurveyView(
-                            vm: vm,
-                            onFinishToDashboard: {
-//                                onFinishToDashboard?()  // lempar ke Dashboard
-//                                flowDismiss()  // tutup SurveyView
-                                shouldExitToDashboard = true
-                            },
-                            survey: survey,
-                            questions: vm.questions
-                            
-
-                        )
-
-                    ) {
-                        Text("Next")
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 20)
-                            .background(Color(hex: "003F57"))
-                            .cornerRadius(10)
+        private var bottomStickyBar: some View {
+            VStack(spacing: 0) {
+                
+                // ---------------------------------------------------------
+                // 1. BAGIAN ATAS: TOMBOL NEXT (Melayang / Transparan)
+                // ---------------------------------------------------------
+                if selectedTab == 0 {
+                    HStack {
+                        Spacer() // Dorong ke kanan
+                        
+                        NavigationLink(
+                            destination: FinishingSurveyView(
+                                vm: vm,
+                                onFinishToDashboard: {
+                                    shouldExitToDashboard = true
+                                },
+                                survey: survey,
+                                questions: vm.questions
+                            )
+                        ) {
+                            Text("Next")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .font(.subheadline)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 20)
+                                .background(Color(hex: "003F57"))
+                                .cornerRadius(12) // Lebih bulat biar cantik saat melayang
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2) // Tambah shadow biar pop-out
+                        }
                     }
-                    .padding(.trailing, 30)
-                    .padding(.bottom, 20)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 10) // Jarak antara tombol Next dan Area Putih di bawahnya
                 }
-
-                HStack {
-
-                    Button(action: {
-                        vm.addQuestion(type: .shortAnswer)
-                    }) {
-                        Text("Add Question")
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(Color(hex: "FE982A"))
-                            .cornerRadius(15)
-                            .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-                    }
-
-                }
-                .padding(.horizontal, 30)
-                .padding(.top, 20)
-                //                .padding(.bottom, 30)
-                //                .background(Color.white)
-                //                .shadow(radius: 10)
-
-            } else {
-                HStack {
-                    // Cek apakah survei masih publik (aktif)
-                    if survey.is_public {
-                        let responseCount = survey.has_hresponse?.count ?? 0
-                        let canFinish = responseCount > 0
-
+                
+                // ---------------------------------------------------------
+                // 2. BAGIAN BAWAH: AREA PUTIH (Add Question / Finish)
+                // ---------------------------------------------------------
+                VStack {
+                    if selectedTab == 0 {
+                        // --- TOMBOL ADD QUESTION ---
                         Button(action: {
-                            showFinishAlert = true
+                            vm.addQuestion(type: .shortAnswer)
                         }) {
-                            Text("Finish Survey")
+                            Text("Add Question")
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(Color.red)  // Warna Merah untuk stop
-                                .cornerRadius(15)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 5,
-                                    y: 2
-                                )
+                                .padding(.vertical, 12)
+                                .background(Color(hex: "FE982A"))
+                                .cornerRadius(12)
+                                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                         }
-                        .disabled(!canFinish)  // Matikan tombol jika 0 response
-
                     } else {
-                        // Jika sudah finish/close (opsional)
-                        Text("Survey Closed")
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(Color.gray)
-                            .cornerRadius(15)
+                        // --- TOMBOL FINISH (Tab Responses) ---
+                        if survey.is_public {
+                            let responseCount = survey.has_hresponse?.count ?? 0
+                            let canFinish = responseCount > 0
+                            
+                            Button(action: {
+                                showFinishAlert = true
+                            }) {
+                                Text("Finish Survey")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.red)
+                                    .cornerRadius(12)
+                                    .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                            }
+                            .disabled(!canFinish)
+                        } else {
+                            Text("Survey Closed")
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.gray)
+                                .cornerRadius(12)
+                        }
                     }
                 }
-                .padding(.horizontal, 30)
-                .padding(.top, 20)
+                .padding(.horizontal, 20)
+                .padding(.top, 35)   // Padding atas di dalam kotak putih
+                .padding(.bottom, 20) // Padding bawah (sebelum safe area)
+                .background(Color.white) // 🔥 PINDAHKAN BACKGROUND PUTIH KE SINI
+                .shadow(radius: 5, x: 0, y: -5)
             }
-
+            .edgesIgnoringSafeArea(.bottom) // Agar kotak putih mentok sampai bawah layar
         }
-        .padding(.bottom, 30)
-        .background(Color.white)
-        .shadow(radius: 10)
-        .edgesIgnoringSafeArea(.bottom)
-    }
 }
