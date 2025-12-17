@@ -154,7 +154,7 @@ struct ViewPointView: View {
                 Spacer()
             }
             .toolbar(.hidden, for: .tabBar)
-            .background(Color(.systemGray6))
+            .background(Color(.white))
             .ignoresSafeArea(edges: .bottom)
         }
     }

@@ -17,37 +17,45 @@ class SurveyViewModel: ObservableObject {
         loadQuestions()
         fetchResponses()
     }
-
     func loadQuestions() {
-        let request = Question.fetchRequest()
+            let request: NSFetchRequest<Question> = Question.fetchRequest()
 
-        // FILTER BERDASARKAN SURVEY
-        request.predicate = NSPredicate(format: "in_survey == %@", survey)
+            // 1. FILTER: Hanya ambil pertanyaan milik survey ini
+            request.predicate = NSPredicate(format: "in_survey == %@", survey)
+            
+            // 2. ✅ SORTING: Urutkan berdasarkan waktu pembuatan (Lama -> Baru)
+            // Pastikan Anda sudah menambahkan atribut 'question_created_at' di Core Data Editor!
+            request.sortDescriptors = [
+                NSSortDescriptor(key: "question_created_at", ascending: true)
+            ]
 
-        do {
-            questions = try context.fetch(request)
-        } catch {
-            print("❌ Failed loadQuestions:", error)
+            do {
+                questions = try context.fetch(request)
+            } catch {
+                print("❌ Failed loadQuestions:", error)
+            }
         }
-    }
 
-    func addQuestion(type: QuestionType) {
-        let q = Question(context: context)
-        q.question_id = UUID()
-        q.question_type = type.rawValue
-        q.question_text = "Enter Your Question"
-        q.question_status_del = false
-        q.question_price = 0
-        q.question_img_url = nil
+        func addQuestion(type: QuestionType) {
+            let q = Question(context: context)
+            q.question_id = UUID()
+            q.question_type = type.rawValue
+            q.question_text = "Enter Your Question"
+            q.question_status_del = false
+            q.question_price = 0
+            q.question_img_url = nil
+            
+            // ✅ PENTING: Simpan tanggal pembuatan saat tombol ditekan
+            q.question_created_at = Date()
 
-        // assign survey_id manual
-        q.in_survey = survey
+            // Assign survey_id manual
+            q.in_survey = survey
 
-        saveContext()
-        updateSurveyPoints()
-        loadQuestions()
-    }
-
+            saveContext()
+            updateSurveyPoints()
+            loadQuestions() // Refresh list agar UI update sesuai urutan
+        }
+    
     func calculateTotalPoints() -> Int {
         var total = 0
         for q in questions {

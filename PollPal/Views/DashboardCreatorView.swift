@@ -277,6 +277,7 @@ struct ActiveSurveyCard: View {
             Text(title)
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "1F3A45"))
+                .lineLimit(1)
             Spacer()
             Text("\(responses) Responses")
                 .font(.system(size: 18, weight: .semibold))

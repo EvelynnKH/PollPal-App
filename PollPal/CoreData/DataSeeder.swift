@@ -441,23 +441,26 @@ struct DataSeeder {
         }
         return s
     }
-
     @discardableResult
-    private static func addQuestion(
-        ctx: NSManagedObjectContext,
-        survey: Survey,
-        text: String,
-        type: String
-    ) -> Question {
-        let q = Question(context: ctx)
-        q.question_id = UUID()
-        q.question_text = text
-        q.question_type = type
-        q.question_price = 10
-        q.question_status_del = false
-        q.in_survey = survey
-        return q
-    }
+        private static func addQuestion(
+            ctx: NSManagedObjectContext,
+            survey: Survey,
+            text: String,
+            type: String
+        ) -> Question {
+            let q = Question(context: ctx)
+            q.question_id = UUID()
+            q.question_text = text
+            q.question_type = type
+            q.question_price = 10
+            q.question_status_del = false
+            q.in_survey = survey
+            
+            let existingCount = survey.has_question?.count ?? 0
+            q.question_created_at = Date().addingTimeInterval(Double(existingCount))
+            
+            return q
+        }
 
     @discardableResult
     private static func addOption(

@@ -29,7 +29,7 @@ struct AllSurveyCreatorView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color(.white)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
